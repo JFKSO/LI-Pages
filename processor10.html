@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>LinkedIn Data Processor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .canvas-container { 
+            width: 100%; 
+            height: 600px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        #processingCanvas {
+            width: 100%;
+            height: 100%;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            background: #0066cc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <div class="input-group">
+                <label>Your Name: <input type="text" id="uploaderName" required></label>
+                <span id="nameWarning" style="display: none; color: #dc3545;">Please enter your name</span>
+            </div>
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="enableTracking" checked>
+                    Enable role change tracking
+                </label>
+                <div class="note">Generates unique anonymous codes to track role changes</div>
+            </div>
+            <input type="file" id="fileInput" accept=".csv">
+            <button id="processBtn" class="btn" disabled>Process Data</button>
+            <button id="downloadBtn" class="btn" disabled>Download Results</button>
+            <button id="resetBtn" class="btn">Reset</button>
+        </div>
+        <div class="canvas-container">
+            <canvas id="processingCanvas"></canvas>
+        </div>
+    </div>
+
+<script>
+// Constants and Configuration
+const BREAKPOINTS = {
+    MOBILE: 768,
+    TABLET: 1024,
+    DESKTOP: 1200
+};
+
+const ANIMATION = {
+    DURATION: 300,
+    EASING: t => t * (2 - t),
+    MIN_FRAME_TIME: 1000/60
+};
+
+const EventTypes = {
+    DATA_LOADED: 'dataLoaded',
+    PROCESSING_START: 'processingStart',
+    PROCESSING_PROGRESS: 'processingProgress',
+    PROCESSING_COMPLETE: 'processingComplete',
+    ERROR: 'error',
+    STATE_CHANGE: 'stateChange'
+};
+
+// Event System
+const EventSystem = {
+    events: {},
+    validEvents: new Set(Object.values(EventTypes)),
+    debug: false,
+
+    initEvents() {
+        this.events = {};
+    },
+
+    setDebug(enabled) {
+        this.debug = enabled;
+    },
+
+    on(eventName, callback) {
+        if (!this.validEvents.has(eventName)) {
+            console.warn(`Warning: Subscribing to undefined event '${eventName}'`);
+        }
+        if (!this.events[eventName]) {
+            this.events[eventName] = [];
+        }
+        this.events[eventName].push(callback);
+    },
+
+    emit(eventName, data) {
+        if (!this.validEvents.has(eventName)) {
+            console.warn(`Warning: Emitting undefined event '${eventName}'`);
+        }
+        if (this.debug) {
+            console.log(`Event emitted: ${eventName}`, data);
+        }
+        if (this.events[eventName]) {
+            this.events[eventName].forEach(callback => callback(data));
+        }
+    }
+};
+
+// Base Component
+const BaseComponent = {
+    processor: null,
+    _textCache: new Map(),
+    
+    init(processor) {
+        this.processor = processor;
+    },
+    
+    getResponsiveConfig() {
+        const width = window.innerWidth;
+        if (width < BREAKPOINTS.MOBILE) {
+            return {
+                padding: 15,
+                fontSize: 12,
+                headerSize: 14,
+                rowHeight: 20,
+                maxRows: 3
+            };
+        } else if (width < BREAKPOINTS.TABLET) {
+            return {
+                padding: 20,
+                fontSize: 13,
+                headerSize: 15,
+                rowHeight: 22,
+                maxRows: 4
+            };
+        }
+        return {
+            padding: 30,
+            fontSize: 14,
+            headerSize: 16,
+            rowHeight: 24,
+            maxRows: 5
+        };
+    },
+    
+    getFontForDisplay(type = 'normal') {
+        const config = this.getResponsiveConfig();
+        const size = type === 'header' ? config.headerSize : config.fontSize;
+        return `${type === 'header' ? 'bold ' : ''}${size}px system-ui`;
+    },
+    
+    measureText(ctx, text, font) {
+        const key = `${text}-${font}`;
+        if (!this._textCache.has(key)) {
+            ctx.font = font;
+            this._textCache.set(key, ctx.measureText(text));
+        }
+        return this._textCache.get(key);
+    },
+    
+    clearTextCache() {
+        this._textCache.clear();
+    },
+    
+    truncateText(ctx, text, maxWidth) {
+        if (this.measureText(ctx, text, ctx.font).width <= maxWidth) return text;
+        let truncated = text;
+        while (truncated.length > 3 && 
+               this.measureText(ctx, truncated + '...', ctx.font).width > maxWidth) {
+            truncated = truncated.slice(0, -1);
+        }
+        return truncated + '...';
+    },
+    
+    drawScrollIndicator(ctx, bounds, { hasMore, direction = 'down' }) {
+        if (!hasMore) return;
+        
+        const { x, y, width } = bounds;
+        const size = 8;
+        
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.beginPath();
+        
+        if (direction === 'down') {
+            ctx.moveTo(x + width/2 - size, y);
+            ctx.lineTo(x + width/2 + size, y);
+            ctx.lineTo(x + width/2, y + size);
+        } else {
+            ctx.moveTo(x + width/2 - size, y + size);
+            ctx.lineTo(x + width/2 + size, y + size);
+            ctx.lineTo(x + width/2, y);
+        }
+        
+        ctx.closePath();
+        ctx.fill();
+    },
+    
+    animateValue(start, end, progress) {
+        return start + (end - start) * ANIMATION.EASING(progress);
+    }
+};
+
+// Status Component
+const StatusComponent = Object.assign(Object.create(BaseComponent), {
+    animation: {
+        progress: null,
+        startTime: 0,
+        startValue: 0,
+        endValue: 0
+    },
+    
+    render(ctx, bounds) {
+        const { x, y, width } = bounds;
+        const config = this.getResponsiveConfig();
+        const height = config.rowHeight * 1.5;
+        const { status } = this.processor.state;
+        
+        // Background
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(x, y, width, height);
+        
+        // Status text
+        ctx.font = this.getFontForDisplay();
+        ctx.fillStyle = this.getStatusColor();
+        ctx.textAlign = 'left';
+        ctx.fillText(this.getStatusText(), x + config.padding, y + height/2 + 5);
+        
+        // Animated progress bar
+        if (status === 'PROCESSING') {
+            this.updateProgressAnimation();
+            this.drawProgressBar(ctx, {
+                x: x + config.padding,
+                y: y + height - 8,
+                width: width - (config.padding * 2),
+                height: 4
+            });
+        }
+        
+        return height;
+    },
+    
+    getStatusColor() {
+        const { status } = this.processor.state;
+        switch (status) {
+            case 'ERROR': return '#dc3545';
+            case 'COMPLETE': return '#28a745';
+            case 'PROCESSING': return '#0066cc';
+            default: return '#333333';
+        }
+    },
+    
+    getStatusText() {
+        const { status, error } = this.processor.state;
+        switch (status) {
+            case 'ERROR': 
+                return `Error: ${error || 'Unknown error'}`;
+            case 'PROCESSING': 
+                return `Processing... ${Math.round(this.animation.progress * 100)}%`;
+            case 'COMPLETE': 
+                return `Processing complete - ${this.processor.processedData.length} entries processed`;
+            case 'IDLE': 
+                return 'Ready to process data';
+            default: 
+                return status;
+        }
+    },
+    
+    updateProgressAnimation() {
+        const { progress } = this.processor.state;
+        
+        // Directly set the progress without animation for now
+        this.animation.progress = progress;
+        
+        // If you want to keep the animation, use this alternative:
+        /*
+        const now = performance.now();
+        if (progress !== this.animation.endValue) {
+            this.animation.startTime = now;
+            this.animation.startValue = this.animation.progress || 0;
+            this.animation.endValue = progress;
+        }
+        
+        const elapsed = now - this.animation.startTime;
+        const duration = ANIMATION.DURATION;
+        
+        if (elapsed >= duration) {
+            this.animation.progress = progress;
+        } else {
+            this.animation.progress = this.animateValue(
+                this.animation.startValue,
+                this.animation.endValue,
+                elapsed / duration
+            );
+        }
+        */
+    },
+    
+    drawProgressBar(ctx, bounds) {
+        const { x, y, width, height } = bounds;
+        
+        // Background
+        ctx.fillStyle = '#e9ecef';
+        ctx.fillRect(x, y, width, height);
+        
+        // Progress
+        const progress = this.animation.progress || 0;
+        if (progress > 0) {
+            ctx.fillStyle = '#0066cc';
+            ctx.fillRect(x, y, width * progress, height);
+        }
+    }
+});
+
+// Preview Component
+const PreviewComponent = Object.assign(Object.create(BaseComponent), {
+    scroll: {
+        offset: 0,
+        velocity: 0,
+        lastTime: 0
+    },
+    interactiveAreas: [],
+    hoveredArea: null,
+    
+    render(ctx, bounds, data) {
+        const config = this.getResponsiveConfig();
+        const { x, y, width, height } = bounds;
+        
+        // Start with proper padding
+        let currentY = y + config.padding;
+        
+        // Section title
+        ctx.font = this.getFontForDisplay('header');
+        ctx.fillStyle = this.processor.colors.primary;
+        ctx.fillText(
+            this.processor.state.status === 'COMPLETE' ? 'Processing Results' : 'Data Preview',
+            x + config.padding,
+            currentY
+        );
+        currentY += config.rowHeight * 1.5;
+        
+        // Headers
+        const headers = data.headers;
+        const colWidth = (width - config.padding * 2) / headers.length;
+        
+        ctx.font = this.getFontForDisplay('header');
+        headers.forEach((header, i) => {
+            // Skip rendering the Encrypted Token header during preview
+            if (header === 'Encrypted Token' && this.processor.state.status === 'PREVIEW') {
+                return;
+            }
+            const truncated = this.truncateText(ctx, header, colWidth - 10);
+            ctx.fillText(
+                truncated,
+                x + config.padding + (i * colWidth),
+                currentY
+            );
+        });
+        
+        // Add extra spacing after headers before starting rows
+        currentY += config.rowHeight * 1.2;
+        
+        // Draw rows
+        ctx.font = this.getFontForDisplay();
+        const visibleRows = data.rows;
+        
+        visibleRows.forEach((row, i) => {
+            const rowY = currentY + (i * config.rowHeight);
+            
+            // Row background
+            if (i % 2 === 0) {
+                ctx.fillStyle = 'rgba(0,0,0,0.02)';
+                ctx.fillRect(
+                    x + config.padding,
+                    rowY - config.rowHeight + 5,
+                    width - config.padding * 2,
+                    config.rowHeight
+                );
+            }
+            
+            // Clear previous interactive areas
+            this.interactiveAreas = [];
+
+            // Row data
+            headers.forEach((header, j) => {
+                const value = row[header] || '';
+                const isProcessed = this.processor.state.status === 'COMPLETE';
+                const isRemovedField = isProcessed && value === '<Removed>';
+                const isIdField = header === 'Encrypted Token';
+                
+                ctx.fillStyle = isRemovedField ? '#9CA3AF' : this.processor.colors.text;
+                
+                let displayValue = value;
+                if (isIdField && value) {
+                    displayValue = `🔒 (${value.substring(0, 5)}...)`;
+                    
+                    // Store the area for this ID field
+                    const cellX = x + config.padding + (j * colWidth);
+                    const cellWidth = this.measureText(ctx, displayValue, ctx.font).width;
+                    
+                    this.interactiveAreas.push({
+                        x: cellX,
+                        y: rowY - config.rowHeight + 5,
+                        width: cellWidth,
+                        height: config.rowHeight,
+                        fullId: value,
+                        displayValue
+                    });
+
+                    // If this area is being hovered, show the full ID
+                    if (this.hoveredArea && 
+                        this.hoveredArea.x === cellX && 
+                        this.hoveredArea.y === rowY - config.rowHeight + 5) {
+                        displayValue = `🔒 ${value}`;
+                        ctx.fillStyle = '#0066cc'; // Highlight color
+                    }
+                }
+                
+                const truncated = this.truncateText(
+                    ctx,
+                    displayValue.toString(),
+                    colWidth - 10
+                );
+                ctx.fillText(
+                    truncated,
+                    x + config.padding + (j * colWidth),
+                    rowY
+                );
+            });
+        });
+
+        // Only show scroll indicators if we actually have more rows than we can display
+        const visibleRowCount = config.maxRows;
+        const actualRowCount = data.rows.length;
+        if (actualRowCount > visibleRowCount) {
+            this.drawScrollIndicators(ctx, {
+                x,
+                y: y + height - config.padding,
+                width,
+                startIndex: this.scroll.offset,  // Use actual scroll offset
+                totalRows: actualRowCount,
+                visibleRows: visibleRowCount
+            });
+        }
+
+        return height;
+    },
+
+    drawScrollIndicators(ctx, { x, y, width, startIndex, totalRows, visibleRows }) {
+        // Draw up indicator if we're not at the top
+        if (startIndex > 0) {
+            this.drawScrollIndicator(ctx, {
+                x,
+                y: y - 20,  // Move up a bit
+                width
+            }, { 
+                hasMore: true, 
+                direction: 'up' 
+            });
+        }
+
+        // Draw down indicator if we have more rows below
+        if (startIndex + visibleRows < totalRows) {
+            this.drawScrollIndicator(ctx, {
+                x,
+                y,
+                width
+            }, { 
+                hasMore: true, 
+                direction: 'down' 
+            });
+        }
+    },
+
+    handleResize() {
+        this.scroll.offset = 0;
+        this.scroll.velocity = 0;
+        this.clearTextCache();
+    },
+
+    handleMouseMove(event) {
+        const rect = this.processor.canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Check if mouse is over any interactive area
+        const hoveredArea = this.interactiveAreas.find(area => 
+            x >= area.x && 
+            x <= area.x + area.width && 
+            y >= area.y && 
+            y <= area.y + area.height
+        );
+
+        if (hoveredArea !== this.hoveredArea) {
+            this.hoveredArea = hoveredArea;
+            this.processor.canvas.style.cursor = hoveredArea ? 'pointer' : 'default';
+            this.processor.drawProcessingResults();
+        }
+    },
+
+    handleClick(event) {
+        const rect = this.processor.canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        // Check if click is on any interactive area
+        const clickedArea = this.interactiveAreas.find(area => 
+            x >= area.x && 
+            x <= area.x + area.width && 
+            y >= area.y && 
+            y <= area.y + area.height
+        );
+
+        if (clickedArea) {
+            // Copy to clipboard
+            navigator.clipboard.writeText(clickedArea.fullId)
+                .then(() => {
+                    // Show a temporary tooltip or message
+                    alert('ID copied to clipboard!');
+                })
+                .catch(err => console.error('Failed to copy:', err));
+        }
+    }
+});
+
+// Canvas Processor
+const CanvasProcessor = {
+    canvas: null,
+    ctx: null,
+    data: null,
+    processedData: null,
+    skippedData: null,
+    animation: null,
+    scale: window.devicePixelRatio || 1,
+    
+    colors: {
+        background: '#ffffff',
+        text: '#333333',
+        primary: '#0066cc',
+        success: '#28a745',
+        warning: '#ffc107',
+        error: '#dc3545',
+        grid: '#f0f0f0',
+        highlight: '#e3f2fd'
+    },
+
+    components: {},
+    
+    setupCanvas: function() {
+        const rect = this.canvas.getBoundingClientRect();
+        this.canvas.width = rect.width * this.scale;
+        this.canvas.height = rect.height * this.scale;
+        this.ctx.scale(this.scale, this.scale);
+        this.ctx.font = '14px system-ui';
+    },
+    
+    init: function() {
+        this.initEvents();
+        this.setDebug(true);
+        
+        this.canvas = document.getElementById('processingCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.setupCanvas();
+        
+        // Initialize components
+        this.components = {
+            status: Object.create(StatusComponent),
+            preview: Object.create(PreviewComponent)
+        };
+        
+        Object.values(this.components).forEach(component => {
+            component.init(this);
+        });
+        
+        this.setupEventHandlers();
+        this.bindEvents();
+        
+        this.state = {
+            status: 'IDLE',
+            progress: 0,
+            error: null
+        };
+        
+        this.drawInitialState();
+    },
+    
+    destroy() {
+        window.removeEventListener('resize', this._boundResize);
+        this.canvas.removeEventListener('wheel', this._boundScroll);
+        Object.values(this.components).forEach(component => {
+            if (component.clearTextCache) {
+                component.clearTextCache();
+            }
+        });
+        this.canvas.removeEventListener('mousemove', this._boundMouseMove);
+        this.canvas.removeEventListener('click', this._boundClick);
+    },
+    
+    handleResize() {
+        this.setupCanvas();
+        Object.values(this.components).forEach(component => {
+            if (component.handleResize) {
+                component.handleResize();
+            }
+        });
+        this.drawProcessingResults();
+    },
+    
+    setupEventHandlers() {
+        this.on(EventTypes.DATA_LOADED, (data) => {
+            console.log('Data loaded:', data?.rows?.length || 0, 'rows');
+            this.setState({ status: 'PREVIEW', data });
+        });
+
+        this.on(EventTypes.PROCESSING_START, () => {
+            console.log('Processing started');
+            this.setState({ status: 'PROCESSING', progress: 0 });
+        });
+
+        this.on(EventTypes.PROCESSING_PROGRESS, (progress) => {
+            console.log('Processing progress:', progress);
+            this.setState({ progress });
+        });
+
+        this.on(EventTypes.PROCESSING_COMPLETE, (result) => {
+            console.log('Processing complete:', result);
+            this.setState({ 
+                status: 'COMPLETE',
+                progress: 1,
+                processedData: result.processed,
+                skippedData: result.skipped
+            });
+            
+            document.getElementById('downloadBtn').disabled = !result.processed?.length;
+        });
+
+        this.on(EventTypes.ERROR, (error) => {
+            console.error('Error:', error);
+            this.setState({ 
+                status: 'ERROR',
+                error: error.message || error
+            });
+        });
+    },
+    
+    bindEvents() {
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+        }
+
+        const processBtn = document.getElementById('processBtn');
+        if (processBtn) {
+            processBtn.addEventListener('click', this.processData.bind(this));
+        }
+
+        const downloadBtn = document.getElementById('downloadBtn');
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', this.downloadProcessedData.bind(this));
+        }
+
+        const resetBtn = document.getElementById('resetBtn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', this.reset.bind(this));
+        }
+
+        this._boundResize = this.handleResize.bind(this);
+        this._boundScroll = this.handleScroll.bind(this);
+        
+        window.addEventListener('resize', this._boundResize);
+        this.canvas.addEventListener('wheel', this._boundScroll);
+
+        this._boundMouseMove = this.components.preview.handleMouseMove.bind(this.components.preview);
+        this._boundClick = this.components.preview.handleClick.bind(this.components.preview);
+        
+        this.canvas.addEventListener('mousemove', this._boundMouseMove);
+        this.canvas.addEventListener('click', this._boundClick);
+    },
+    
+    setState(newState) {
+        this.state = { ...this.state, ...newState };
+        this.emit(EventTypes.STATE_CHANGE, this.state);
+        requestAnimationFrame(() => this.drawProcessingResults());
+    },
+    
+    handleScroll(event) {
+        event.preventDefault();
+        
+        if (!this.data?.rows.length) return;
+        
+        const previewComponent = this.components.preview;
+        previewComponent.scroll.velocity += event.deltaY * 0.1;
+        
+        this.drawProcessingResults();
+    },
+    
+    drawInitialState() {
+        this.ctx.fillStyle = this.colors.background;
+        this.ctx.fillRect(0, 0, this.canvas.width / this.scale, this.canvas.height / this.scale);
+        
+        this.ctx.fillStyle = this.colors.text;
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(
+            'Select a CSV file to begin processing',
+            (this.canvas.width / this.scale) / 2,
+            (this.canvas.height / this.scale) / 2
+        );
+    },
+    
+    drawProcessingResults() {
+        const width = this.canvas.width / this.scale;
+        const height = this.canvas.height / this.scale;
+        const config = this.components.preview.getResponsiveConfig();
+
+        // Clear canvas
+        this.ctx.fillStyle = this.colors.background;
+        this.ctx.fillRect(0, 0, width, height);
+
+        let currentY = config.padding;
+
+        // Status section (always shown)
+        currentY += this.components.status.render(this.ctx, {
+            x: 0,
+            y: currentY,
+            width: width
+        });
+
+        // If processing, don't show preview
+        if (this.state.status === 'PROCESSING') {
+            requestAnimationFrame(() => this.drawProcessingResults());
+            return;
+        }
+
+        // Add spacing between sections
+        currentY += config.padding * 1.5;
+
+        // Data preview or results
+        if (this.data) {
+            const remainingHeight = height - currentY - config.padding;
+            
+            this.components.preview.render(this.ctx, {
+                x: 0,
+                y: currentY,
+                width: width,
+                height: remainingHeight
+            }, this.data);
+        }
+    },
+    
+    async handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        try {
+            const text = await file.text();
+            const data = this.parseCSV(text);
+            this.data = data;
+            document.getElementById('processBtn').disabled = false;
+            this.emit(EventTypes.DATA_LOADED, data);
+        } catch (err) {
+            this.emit(EventTypes.ERROR, err);
+        }
+    },
+    
+    parseCSV(text) {
+        const rows = text.split(/\r?\n/);
+        const headerRow = rows.find(row => 
+            row.includes('Company') && 
+            row.includes('Position') &&
+            row.includes('Connected On')
+        );
+        
+        if (!headerRow) {
+            throw new Error('Invalid CSV format: Missing required headers');
+        }
+
+        const headers = [...headerRow.split(',').map(h => h.trim()), 'Encrypted Token'];
+        const dataStartIndex = rows.indexOf(headerRow) + 1;
+        
+        return {
+            headers,
+            rows: rows.slice(dataStartIndex)
+                .filter(row => row.trim())
+                .map(row => {
+                    const values = this.parseCSVRow(row);
+                    return headers.reduce((acc, header, i) => {
+                        acc[header] = values[i] || '';
+                        return acc;
+                    }, {});
+                })
+        };
+    },
+
+    parseCSVRow(row) {
+        const values = [];
+        let insideQuotes = false;
+        let currentValue = '';
+        
+        for (let char of row) {
+            if (char === '"') {
+                insideQuotes = !insideQuotes;
+            } else if (char === ',' && !insideQuotes) {
+                values.push(currentValue.trim());
+                currentValue = '';
+            } else {
+                currentValue += char;
+            }
+        }
+        values.push(currentValue.trim());
+        
+        return values;
+    },
+
+    processData: function() {
+        try {
+            const enableTracking = document.getElementById('enableTracking').checked;
+            const uploaderName = document.getElementById('uploaderName').value;
+            const nameWarning = document.getElementById('nameWarning');
+
+            if (!uploaderName) {
+                nameWarning.style.display = 'inline';
+                return;
+            }
+            nameWarning.style.display = 'none';
+
+            this.emit(EventTypes.PROCESSING_START);
+            
+            // Store original data structure before processing
+            this.originalData = {
+                headers: [...this.data.headers],
+                rows: [...this.data.rows]
+            };
+            
+            const processed = [];
+            const skipped = [];
+            const seenRoleIds = new Set();
+            const removedFields = ['First Name', 'Last Name', 'URL', 'Email Address', 'Connected On'];
+
+            // Create a copy of the data rows
+            const rows = [...this.data.rows];
+            const totalRows = rows.length;
+            const batchSize = 50;
+            
+            const processRowsWithDelay = async () => {
+                for (let i = 0; i < totalRows; i += batchSize) {
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                    
+                    const end = Math.min(i + batchSize, totalRows);
+                    for (let j = i; j < end; j++) {
+                        const row = rows[j];
+                        try {
+                            const company = (row['Company'] || '').trim();
+                            const position = (row['Position'] || '').trim();
+                            const url = row['URL'] || '';
+
+                            const ids = this.generateIds(company, position, url, enableTracking);
+                            
+                            if (seenRoleIds.has(ids.roleId)) {
+                                skipped.push({
+                                    row: j + 1,
+                                    reason: 'Duplicate role ID',
+                                    data: row
+                                });
+                                continue;
+                            }
+                            
+                            seenRoleIds.add(ids.roleId);
+                            
+                            // Create processed row with <Removed> for specified fields
+                            const processedRow = {
+                                ...row,
+                                'Encrypted Token': ids.roleId,  // Updated field name
+                                company: company || '[COMPANY MISSING]',
+                                position: position || '[POSITION MISSING]',
+                                roleId: ids.roleId,
+                                roleChangeId: ids.roleChangeId,
+                                uploader: uploaderName,
+                                uploadDate: new Date().toISOString()
+                            };
+
+                            // Replace removed fields with <Removed>
+                            removedFields.forEach(field => {
+                                if (processedRow[field]) {
+                                    processedRow[field] = '<Removed>';
+                                }
+                            });
+
+                            processed.push(processedRow);
+                        } catch (err) {
+                            skipped.push({
+                                row: j + 1,
+                                reason: err.message,
+                                data: row
+                            });
+                        }
+                    }
+                    
+                    this.emit(EventTypes.PROCESSING_PROGRESS, end / totalRows);
+                }
+
+                this.processedData = processed;
+                this.skippedData = skipped;
+                
+                // Keep original headers but update the rows with processed data
+                this.data = {
+                    headers: this.originalData.headers,
+                    rows: processed
+                };
+                
+                this.emit(EventTypes.PROCESSING_COMPLETE, { processed, skipped });
+            };
+
+            processRowsWithDelay().catch(err => {
+                this.emit(EventTypes.ERROR, err);
+            });
+            
+        } catch (err) {
+            this.emit(EventTypes.ERROR, err);
+        }
+    },
+
+    downloadProcessedData() {
+        if (!this.processedData || !Array.isArray(this.processedData)) {
+            console.error('No processed data available');
+            return;
+        }
+
+        if (this.processedData.length === 0) {
+            console.error('No records to download');
+            return;
+        }
+        
+        try {
+            // Define the fields we want to keep in the output
+            const desiredFields = [
+                'company',
+                'position',
+                'roleId',
+                'roleChangeId',
+                'uploader',
+                'uploadDate'
+            ];
+            
+            // Filter the data to only include desired fields
+            const sanitizedData = this.processedData.map(row => {
+                return desiredFields.reduce((obj, field) => {
+                    obj[field] = row[field] || '';
+                    return obj;
+                }, {});
+            });
+
+            const headers = desiredFields;
+            const csv = [
+                headers.join(','),
+                ...sanitizedData.map(row => 
+                    headers.map(header => {
+                        const value = row[header] || '';
+                        // Handle values that need quotes
+                        return value.includes(',') || value.includes('"') || value.includes('\n') 
+                            ? `"${value.replace(/"/g, '""')}"` 
+                            : value;
+                    }).join(',')
+                )
+            ].join('\n');
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `processed_data_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            console.log('Download complete:', sanitizedData.length, 'records');
+            
+        } catch (err) {
+            console.error('Download error:', err);
+            this.emit(EventTypes.ERROR, 'Failed to download data: ' + err.message);
+        }
+    },
+
+    generateIds: function(company, position, url, enableTracking) {
+        if (!company && !position) {
+            throw new Error('Both company and position cannot be empty');
+        }
+
+        const prefix = url ? (enableTracking ? 'T' : 'S') : 'M';
+        const roleId = prefix + '_' + CryptoJS.SHA256(company + position + url).toString().substring(0, 16);
+        const roleChangeId = enableTracking && url ? 
+            'RC_' + CryptoJS.SHA256(url).toString().substring(0, 16) : 
+            null;
+
+        return { roleId, roleChangeId };
+    },
+    
+    reset() {
+        this.data = null;
+        this.processedData = null;
+        this.state = {
+            status: 'IDLE',
+            progress: 0,
+            error: null
+        };
+        document.getElementById('fileInput').value = '';
+        document.getElementById('processBtn').disabled = true;
+        document.getElementById('downloadBtn').disabled = true;
+        this.drawInitialState();
+    }
+};
+
+// Initialize the event system
+Object.assign(CanvasProcessor, EventSystem);
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    CanvasProcessor.init();
+    
+    // Add cleanup on page unload
+    window.addEventListener('unload', () => {
+        CanvasProcessor.destroy();
+    });
+});
+</script>
+</body>
+</html>
