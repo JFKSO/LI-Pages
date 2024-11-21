@@ -15,6 +15,23 @@
             width: 100%;
             height: 100%;
         }
+        .upload-guide {
+            transition: opacity 0.3s ease-in-out;
+            opacity: 0;
+            height: 0;
+            overflow: hidden;
+        }
+        .upload-guide.visible {
+            opacity: 1;
+            height: auto;
+            overflow: visible;
+        }
+        .step-animation {
+            transition: transform 0.3s ease-in-out;
+        }
+        .step-animation:hover {
+            transform: translateX(8px);
+        }
     </style>
 </head>
 <body class="min-h-screen p-8 pt-20 bg-gray-50">
@@ -79,8 +96,60 @@
             <div class="canvas-container">
                 <canvas id="processingCanvas"></canvas>
             </div>
+
+            <!-- SharePoint Upload Guide Section -->
+            <div id="uploadGuide" class="upload-guide mt-8">
+                <div class="border-t pt-8">
+                    <h3 class="text-xl font-bold mb-4">Next Step: Secure File Storage</h3>
+                    
+                    <div class="bg-blue-50 rounded-lg p-6 mb-6">
+                        <div class="flex items-start space-x-3">
+                            <svg class="w-6 h-6 text-blue-500 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <p class="text-sm text-blue-800">
+                                For security and tracking, please save your processed file to our dedicated SharePoint folder. This ensures your data remains protected and accessible to authorized team members only.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="step-animation flex items-center space-x-4 bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span class="text-blue-600 font-semibold">1</span>
+                            </div>
+                            <div class="flex-grow">
+                                <h4 class="font-semibold">Open SharePoint Location</h4>
+                                <p class="text-sm text-gray-600 mb-2">Access our secure file storage area</p>
+                                <button onclick="window.open('https://interpublic.sharepoint.com/:f:/r/sites/MBContactInsights/Shared%20Documents/1.Contact%20Drop%20Box?csf=1&web=1&e=77M1Fn', '_blank')" 
+                                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm transition-colors duration-150">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                    </svg>
+                                    Open SharePoint Folder
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="step-animation flex items-center space-x-4 bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span class="text-blue-600 font-semibold">2</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">Upload Your File</h4>
+                                <p class="text-sm text-gray-600">Drag and drop or use the upload button in SharePoint</p>
+                            </div>
+                        </div>
+
+                        <div class="text-sm text-gray-500 mt-4">
+                            Need help? Contact the Growth team for assistance.
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
     <script>
     //pass in the param into name    
     document.addEventListener('DOMContentLoaded', () => {
@@ -312,10 +381,10 @@
             const { progress } = this.processor.state;
             
             // Directly set the progress without animation for now
-            this.animation.progress = progress;
+            //this.animation.progress = progress;
             
             // If you want to keep the animation, use this alternative:
-            /*
+            
             const now = performance.now();
             if (progress !== this.animation.endValue) {
                 this.animation.startTime = now;
@@ -335,7 +404,7 @@
                     elapsed / duration
                 );
             }
-            */
+            
         },
         
         drawProgressBar(ctx, bounds) {
@@ -674,6 +743,13 @@
                 });
                 
                 document.getElementById('downloadBtn').disabled = !result.processed?.length;
+                
+                // Show the upload guide with animation
+                const uploadGuide = document.getElementById('uploadGuide');
+                uploadGuide.style.display = 'block';
+                // Trigger reflow
+                uploadGuide.offsetHeight;
+                uploadGuide.classList.add('visible');
             });
 
             this.on(EventTypes.ERROR, (error) => {
@@ -683,8 +759,8 @@
                     error: error.message || error
                 });
             });
-        },
-        
+        }, // <-- Added missing comma here
+                
         bindEvents() {
             const fileInput = document.getElementById('fileInput');
             if (fileInput) {
@@ -1046,6 +1122,14 @@
             document.getElementById('fileInput').value = '';
             document.getElementById('processBtn').disabled = true;
             document.getElementById('downloadBtn').disabled = true;
+            
+            // Add SharePoint guide reset handling
+            const uploadGuide = document.getElementById('uploadGuide');
+            uploadGuide.classList.remove('visible');
+            setTimeout(() => {
+                uploadGuide.style.display = 'none';
+            }, 300);
+            
             this.drawInitialState();
         }
     };
