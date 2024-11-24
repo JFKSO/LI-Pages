@@ -35,6 +35,16 @@
     </style>
 </head>
 <body class="min-h-screen p-8 pt-20 bg-gray-50">
+    <!-- Back Icon -->
+    <div class="mb-4">
+        <button onclick="window.history.back()" class="flex items-center text-blue-600 hover:text-blue-800">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Back
+        </button>
+    </div>
+
     <!-- Progress Header -->
     <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 p-4">
         <div class="max-w-6xl mx-auto">
@@ -61,7 +71,44 @@
     <div class="max-w-6xl mx-auto">
         <div class="bg-white rounded-lg shadow-lg p-8">
             <h2 class="text-2xl font-bold mb-6">Process Your LinkedIn Contacts</h2>
-            
+
+            <!-- Add the new explainer box -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mb-8 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h4 class="text-lg font-medium text-blue-800 mb-2">Secure & Private Processing</h4>
+                        <p class="text-blue-700">
+                            This tool processes your LinkedIn connections directly in your browser - your data never leaves your device. Personal information (names, emails, etc.) is automatically removed before any insights are generated, creating a fully anonymised dataset.
+                        </p>
+                        <ul class="mt-3 space-y-2 text-blue-700">
+                            <li class="flex items-center">
+                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                One-way encrypted tokens ensure data privacy
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Preview processing steps before completion
+                            </li>
+                            <li class="flex items-center">
+                                <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Secure SharePoint storage for processed files
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <div class="space-y-6 mb-8">
                 <div class="space-y-2">
                     <label for="uploaderName" class="block font-semibold">Your Name</label>
@@ -72,9 +119,9 @@
                 <div class="space-y-2">
                     <label class="flex items-center space-x-2">
                         <input type="checkbox" id="enableTracking" class="w-4 h-4 text-blue-600" checked>
-                        <span class="font-semibold">Enable role change tracking</span>
+                        <span class="font-semibold">Maintain preferences across roles</span>
                     </label>
-                    <div class="text-sm text-gray-600">Generates unique anonymous codes to track role changes</div>
+                    <div class="text-sm text-gray-600">Enables tracking of role changes by creating a secure identifier for managing contact preferences across roles. This helps maintain consistent engagement preferences when a new role is identifed at a company, while providing aggregate insights to inform relationship-building strategy. Without this, each role is treated as a separate contact.</div>
                 </div>
 
                 <div class="space-y-4">
@@ -85,16 +132,42 @@
                         file:bg-blue-50 file:text-blue-700
                         hover:file:bg-blue-100">
                         
-                    <div class="flex space-x-4">
-                        <button id="processBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>Process Data</button>
-                        <button id="downloadBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>Download Results</button>
-                        <button id="resetBtn" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium">Reset</button>
+                    <div class="flex justify-between items-center">
+                        <div class="flex space-x-4">
+                            <button id="processBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>Process Data</button>
+                            <button id="downloadBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>Download Results</button>
+                            <button id="resetBtn" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium">Reset</button>
+                        </div>
+                        <button id="removalBtn" onclick="generateRemovalFile()" class="px-4 py-2 bg-gray-200 text-black rounded-lg hover:bg-gray-300 font-medium disabled:bg-gray-300 disabled:cursor-not-allowed">
+                            <span class="flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                Removal Request
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>
 
             <div class="canvas-container">
                 <canvas id="processingCanvas"></canvas>
+            </div>
+
+            <!-- Add the new completion message div -->
+            <div id="completionMessage" class="hidden transition-opacity duration-300 bg-green-50 border-l-4 border-green-500 p-4 mb-8 rounded-lg">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-green-700">
+                            Processing complete. All personal identifiers have been removed. Scroll up to see a preview of the processed data.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <!-- SharePoint Upload Guide Section -->
@@ -108,7 +181,9 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <p class="text-sm text-blue-800">
-                                For security and tracking, please save your processed file to our dedicated SharePoint folder. This ensures your data remains protected and accessible to authorized team members only.
+                                For security, please save your processed file to our dedicated SharePoint folder. It will be automatically moved to a secure location for insight processing, by only the authorised tool.
+                                <br>
+                                To further safeguard your data and reduce the risk of unintended access or misuse, we strongly recommend deleting the file from your local downloads after upload.
                             </p>
                         </div>
                     </div>
@@ -119,9 +194,26 @@
                                 <span class="text-blue-600 font-semibold">1</span>
                             </div>
                             <div class="flex-grow">
+                                <h4 class="font-semibold">Download Processed File</h4>
+                                <p class="text-sm text-gray-600 mb-2">Save your anonymized contact data</p>
+                                <button onclick="CanvasProcessor.downloadProcessedData()" 
+                                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm transition-colors duration-150">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                    Download Results
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="step-animation flex items-center space-x-4 bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span class="text-blue-600 font-semibold">2</span>
+                            </div>
+                            <div class="flex-grow">
                                 <h4 class="font-semibold">Open SharePoint Location</h4>
                                 <p class="text-sm text-gray-600 mb-2">Access our secure file storage area</p>
-                                <button onclick="window.open('https://interpublic.sharepoint.com/:f:/r/sites/MBContactInsights/Shared%20Documents/1.Contact%20Drop%20Box?csf=1&web=1&e=77M1Fn', '_blank')" 
+                                <button onclick="scrollToSharePointLocation()" 
                                         class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm transition-colors duration-150">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -133,7 +225,7 @@
 
                         <div class="step-animation flex items-center space-x-4 bg-white rounded-lg p-4 shadow-sm border border-gray-100">
                             <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                <span class="text-blue-600 font-semibold">2</span>
+                                <span class="text-blue-600 font-semibold">3</span>
                             </div>
                             <div>
                                 <h4 class="font-semibold">Upload Your File</h4>
@@ -141,9 +233,43 @@
                             </div>
                         </div>
 
+                        <div class="step-animation flex items-center space-x-4 bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span class="text-blue-600 font-semibold">4</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold">That's it!</h4>
+                                <p class="text-sm text-gray-600">The growth team will be in touch directly with you about network insights and follow-ups.</p>
+                            </div>
+                        </div>
+
                         <div class="text-sm text-gray-500 mt-4">
                             Need help? Contact the Growth team for assistance.
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Removal Section at the bottom -->
+            <div class="mt-8 pt-8 border-t border-gray-200">
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <h4 class="text-lg font-semibold mb-3">Data Removal Request</h4>
+                    <p class="text-sm text-gray-600 mb-4">
+                        If at any point in the future you want your data removed, simply upload the file below to the same 
+                        <a href="https://interpublic.sharepoint.com/:f:/r/sites/MBContactInsights/Shared%20Documents/1.Contact%20Drop%20Box?csf=1&web=1&e=77M1Fn" 
+                           target="_blank" 
+                           class="text-blue-600 hover:text-blue-800 underline">SharePoint folder</a> 
+                        - this will signal our system to purge all data associated with your uploads.
+                    </p>
+                    <!-- Ensure the button is left-aligned -->
+                    <div class="flex justify-start">
+                        <button onclick="generateRemovalFile()" 
+                                class="inline-flex items-center px-4 py-2 bg-gray-200 text-black rounded-md hover:bg-gray-300 text-sm transition-colors duration-150">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            Removal Request
+                        </button>
                     </div>
                 </div>
             </div>
@@ -181,6 +307,37 @@
         STATE_CHANGE: 'stateChange'
     };
 
+    // Add these two lines here
+    const ENCODE_NAMES = true; // Toggle switch for name encoding
+    const SHIFT_KEY = 5; // Simple shift value
+
+    // Add encoding function here
+    function encodeString(str) {
+        if (!ENCODE_NAMES) return str;
+        
+        // Get first initial
+        const firstInitial = str.charAt(0);
+        
+        // Encode rest of string
+        const encoded = str.split('')
+            .map(char => {
+                // Only encode letters and numbers
+                if (char.match(/[a-zA-Z0-9]/)) {
+                    const code = char.charCodeAt(0);
+                    // Shift the character by SHIFT_KEY positions
+                    if (code >= 65 && code <= 90) // Uppercase
+                        return String.fromCharCode(((code - 65 + SHIFT_KEY) % 26) + 65);
+                    if (code >= 97 && code <= 122) // Lowercase
+                        return String.fromCharCode(((code - 97 + SHIFT_KEY) % 26) + 97);
+                    if (code >= 48 && code <= 57) // Numbers
+                        return String.fromCharCode(((code - 48 + SHIFT_KEY) % 10) + 48);
+                }
+                return char; // Leave other characters unchanged
+            })
+            .join('');
+        
+        return `U${firstInitial}_${encoded}`;
+    }
     // Event System
     const EventSystem = {
         events: {},
@@ -368,8 +525,15 @@
                     return `Error: ${error || 'Unknown error'}`;
                 case 'PROCESSING': 
                     return `Processing... ${Math.round(this.animation.progress * 100)}%`;
-                case 'COMPLETE': 
-                    return `Processing complete - ${this.processor.processedData.length} entries processed`;
+                case 'COMPLETE': {
+                    const stats = this.processor.removedFieldsStats;
+                    if (!stats) return `Processing complete - ${this.processor.processedData.length} entries processed`;
+                    
+                    const removedStats = Object.entries(stats)
+                        .map(([field, count]) => `${field}: ${count}`)
+                        .join(', ');
+                    return `Processing complete - ${this.processor.processedData.length} entries processed (Removed: ${removedStats})`;
+                }
                 case 'IDLE': 
                     return 'Ready to process data';
                 default: 
@@ -380,15 +544,16 @@
         updateProgressAnimation() {
             const { progress } = this.processor.state;
             
-            // Directly set the progress without animation for now
-            //this.animation.progress = progress;
-            
-            // If you want to keep the animation, use this alternative:
+            // Set initial progress to 33% if we're just starting
+            if (progress === 0) {
+                this.animation.progress = 0.33;
+                return;
+            }
             
             const now = performance.now();
             if (progress !== this.animation.endValue) {
                 this.animation.startTime = now;
-                this.animation.startValue = this.animation.progress || 0;
+                this.animation.startValue = this.animation.progress || 0.33; // Start from 33% if no progress
                 this.animation.endValue = progress;
             }
             
@@ -404,7 +569,6 @@
                     elapsed / duration
                 );
             }
-            
         },
         
         drawProgressBar(ctx, bounds) {
@@ -744,12 +908,32 @@
                 
                 document.getElementById('downloadBtn').disabled = !result.processed?.length;
                 
+                // Show completion message
+                const completionMessage = document.getElementById('completionMessage');
+                completionMessage.classList.remove('hidden');
+                completionMessage.classList.add('opacity-100');
+                
                 // Show the upload guide with animation
                 const uploadGuide = document.getElementById('uploadGuide');
                 uploadGuide.style.display = 'block';
                 // Trigger reflow
                 uploadGuide.offsetHeight;
                 uploadGuide.classList.add('visible');
+
+                // Modified scroll behavior with offset
+                setTimeout(() => {
+                    const completionMessage = document.getElementById('completionMessage');
+                    if (completionMessage) {
+                        const offset = 70; // Adjust this value to control the scroll position
+                        const elementPosition = completionMessage.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - offset;
+                        
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 300);
             });
 
             this.on(EventTypes.ERROR, (error) => {
@@ -780,6 +964,11 @@
             const resetBtn = document.getElementById('resetBtn');
             if (resetBtn) {
                 resetBtn.addEventListener('click', this.reset.bind(this));
+            }
+
+            const removalBtn = document.getElementById('removalBtn');
+            if (removalBtn) {
+                removalBtn.addEventListener('click', this.generateRemovalFile.bind(this));
             }
 
             this._boundResize = this.handleResize.bind(this);
@@ -875,6 +1064,17 @@
                 this.data = data;
                 document.getElementById('processBtn').disabled = false;
                 this.emit(EventTypes.DATA_LOADED, data);
+
+                // Increase offset to scroll further down
+                setTimeout(() => {
+                    const processBtn = document.getElementById('processBtn');
+                    const offset = 245;
+                    const targetPosition = processBtn.getBoundingClientRect().top + window.pageYOffset - offset;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }, 100);
             } catch (err) {
                 this.emit(EventTypes.ERROR, err);
             }
@@ -934,7 +1134,8 @@
                 const enableTracking = document.getElementById('enableTracking').checked;
                 const uploaderName = document.getElementById('uploaderName').value;
                 const nameWarning = document.getElementById('nameWarning');
-
+                // Add this line after getting uploaderName
+                const encodedName = encodeString(uploaderName);
                 if (!uploaderName) {
                     nameWarning.style.display = 'inline';
                     return;
@@ -949,11 +1150,41 @@
                     rows: [...this.data.rows]
                 };
                 
+                // Find and store most recent date BEFORE processing
+                try {
+                    const mostRecentDate = this.data.rows
+                        .map(row => row['Connected On'])
+                        .filter(date => {
+                            if (!date) return false;
+                            try {
+                                const testDate = new Date(date);
+                                return testDate instanceof Date && !isNaN(testDate);
+                            } catch {
+                                return false;
+                            }
+                        })
+                        .sort((a, b) => new Date(b) - new Date(a))[0];
+
+                    // Always set mostRecentConnectionDate, regardless of tracking
+                    this.mostRecentConnectionDate = mostRecentDate ? 
+                        new Date(mostRecentDate)
+                            .toISOString()
+                            .split('T')[0]
+                            .replace(/-/g, '') 
+                        : 'NoDate';
+                        
+                    console.log('Most recent date:', this.mostRecentConnectionDate); // Debug log
+                } catch (dateErr) {
+                    console.warn('Date parsing error:', dateErr);
+                    this.mostRecentConnectionDate = 'NoDate';
+                }
+
                 const processed = [];
                 const skipped = [];
                 const seenRoleIds = new Set();
                 const removedFields = ['First Name', 'Last Name', 'URL', 'Email Address', 'Connected On'];
-
+                const removedFieldsStats = {}; // Add stats tracking
+                
                 // Create a copy of the data rows
                 const rows = [...this.data.rows];
                 const totalRows = rows.length;
@@ -971,34 +1202,39 @@
                                 const position = (row['Position'] || '').trim();
                                 const url = row['URL'] || '';
 
-                                const ids = this.generateIds(company, position, url, enableTracking);
-                                
-                                if (seenRoleIds.has(ids.roleId)) {
+                                // Only skip if BOTH company AND position are missing
+                                if (!company || !position) {
                                     skipped.push({
                                         row: j + 1,
-                                        reason: 'Duplicate role ID',
+                                        reason: 'Missing required company or position',
                                         data: row
                                     });
                                     continue;
                                 }
+
+                                const ids = this.generateIds(company, position, url, enableTracking);
                                 
-                                seenRoleIds.add(ids.roleId);
-                                
-                                // Create processed row with <Removed> for specified fields
+                                // Track removed fields for stats
+                                removedFields.forEach(field => {
+                                    if (row[field]) {
+                                        removedFieldsStats[field] = (removedFieldsStats[field] || 0) + 1;
+                                    }
+                                });
+
                                 const processedRow = {
                                     ...row,
-                                    'Encrypted Token': ids.roleId,  // Updated field name
-                                    company: company || '[COMPANY MISSING]',
-                                    position: position || '[POSITION MISSING]',
-                                    roleId: ids.roleId,
-                                    roleChangeId: ids.roleChangeId,
-                                    uploader: uploaderName,
+                                    'Encrypted Token': ids.mainToken,
+                                    company: company,
+                                    position: position,
+                                    mainToken: ids.mainToken,
+                                    prefToken: ids.prefToken,
+                                    uploader: encodedName,
                                     uploadDate: new Date().toISOString()
                                 };
 
-                                // Replace removed fields with <Removed>
+                                // Mark removed fields
                                 removedFields.forEach(field => {
-                                    if (processedRow[field]) {
+                                    if (row[field]) {
                                         processedRow[field] = '<Removed>';
                                     }
                                 });
@@ -1025,6 +1261,7 @@
                         rows: processed
                     };
                     
+                    this.removedFieldsStats = removedFieldsStats; // Store stats
                     this.emit(EventTypes.PROCESSING_COMPLETE, { processed, skipped });
                 };
 
@@ -1049,12 +1286,29 @@
             }
             
             try {
+                // Get submitter name and encode it
+                const uploaderName = document.getElementById('uploaderName').value;
+                const encodedName = encodeString(uploaderName);
+                
+                // Use the stored most recent date, with better fallback
+                const formattedMostRecent = this.mostRecentConnectionDate || 'NoDate';
+                
+                // Format current date (pull date)
+                const pullDate = new Date()
+                    .toISOString()
+                    .split('T')[0]
+                    .replace(/-/g, '');
+                
+                // Create filename with encoded name - add console.log to debug
+                console.log('Creating filename with:', {encodedName, formattedMostRecent, pullDate});
+                const filename = `${encodedName}_MR_${formattedMostRecent}_PD_${pullDate}.csv`;
+                
                 // Define the fields we want to keep in the output
                 const desiredFields = [
                     'company',
                     'position',
-                    'roleId',
-                    'roleChangeId',
+                    'mainToken',
+                    'prefToken',
                     'uploader',
                     'uploadDate'
                 ];
@@ -1062,7 +1316,15 @@
                 // Filter the data to only include desired fields
                 const sanitizedData = this.processedData.map(row => {
                     return desiredFields.reduce((obj, field) => {
-                        obj[field] = row[field] || '';
+                        if (field === 'uploader') {
+                            obj[field] = encodedName;
+                        } else if (field === 'mainToken') {
+                            obj[field] = row.mainToken || '';
+                        } else if (field === 'prefToken') {
+                            obj[field] = row.prefToken || '';
+                        } else {
+                            obj[field] = row[field] || '';
+                        }
                         return obj;
                     }, {});
                 });
@@ -1085,7 +1347,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `processed_data_${new Date().toISOString().split('T')[0]}.csv`;
+                a.download = filename;
                 a.click();
                 URL.revokeObjectURL(url);
                 
@@ -1102,13 +1364,34 @@
                 throw new Error('Both company and position cannot be empty');
             }
 
-            const prefix = url ? (enableTracking ? 'T' : 'S') : 'M';
-            const roleId = prefix + '_' + CryptoJS.SHA256(company + position + url).toString().substring(0, 16);
-            const roleChangeId = enableTracking && url ? 
-                'RC_' + CryptoJS.SHA256(url).toString().substring(0, 16) : 
-                null;
+            let mainToken, prefToken;
 
-            return { roleId, roleChangeId };
+            // Determine token type based on documentation rules:
+            // M - No URL provided (minimal information)
+            // S - URL provided (with or without tracking)
+            // T - Additional token when tracking enabled AND URL provided
+            if (!url || url === '') {
+                // No URL = Minimal Token (M)
+                mainToken = 'M_' + CryptoJS.SHA256(company + position).toString().substring(0, 16);
+                prefToken = '';
+            } else if (enableTracking) {
+                // URL exists and tracking enabled = Solo Token (S) + Tracked Token (T)
+                mainToken = 'S_' + CryptoJS.SHA256(company + position + url).toString().substring(0, 16);
+                prefToken = 'T_' + CryptoJS.SHA256(url).toString().substring(0, 16);
+            } else {
+                // URL exists but tracking disabled = Solo Token (S) only
+                mainToken = 'S_' + CryptoJS.SHA256(company + position + url).toString().substring(0, 16);
+                prefToken = '';
+            }
+
+            console.log('Token generation:', { 
+                hasUrl: !!url,
+                enableTracking,
+                mainToken,
+                prefToken
+            });
+
+            return { mainToken, prefToken };
         },
         
         reset() {
@@ -1130,6 +1413,11 @@
                 uploadGuide.style.display = 'none';
             }, 300);
             
+            // Hide completion message
+            const completionMessage = document.getElementById('completionMessage');
+            completionMessage.classList.add('hidden');
+            completionMessage.classList.remove('opacity-100');
+            
             this.drawInitialState();
         }
     };
@@ -1146,6 +1434,71 @@
             CanvasProcessor.destroy();
         });
     });
+
+    // Add this function near your other JavaScript functions
+    function generateRemovalFile() {
+        const uploaderName = document.getElementById('uploaderName').value;
+        if (!uploaderName) {
+            alert('Please enter your name first');
+            return;
+        }
+        const encodedName = encodeString(uploaderName);
+
+        // Create the removal request content
+        const content = [
+            'removal_request,timestamp',
+            `${encodedName},${new Date().toISOString()}`
+        ].join('\n');
+
+        // Generate filename with date
+        const date = new Date().toISOString().split('T')[0].replace(/-/g, '');
+        const filename = `${encodedName}_${date}_Remove.csv`;
+
+        // Create and download the file
+        const blob = new Blob([content], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Show confirmation message
+        alert('Removal request file generated. Please upload this file to the same SharePoint location linked at the end of the page to initiate data removal.');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const uploaderNameInput = document.getElementById('uploaderName');
+        const removalBtn = document.getElementById('removalBtn');
+
+        uploaderNameInput.addEventListener('input', () => {
+            removalBtn.disabled = !uploaderNameInput.value.trim();
+        });
+
+        // If there's an initial value (from URL params)
+        if (uploaderNameInput.value.trim()) {
+            removalBtn.disabled = false;
+        }
+    });
+
+    function scrollToSharePointLocation() {
+        window.open('https://interpublic.sharepoint.com/:f:/r/sites/MBContactInsights/Shared%20Documents/1.Contact%20Drop%20Box?csf=1&web=1&e=77M1Fn', '_blank');
+        
+        // Scroll to the "Open SharePoint Location" section
+        const sharePointSection = document.querySelector('.step-animation:nth-child(2)');
+        if (sharePointSection) {
+            const offset = 70; // Adjust this value to control the scroll position
+            const elementPosition = sharePointSection.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+            
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    }
     </script>
 </body>
 </html>
