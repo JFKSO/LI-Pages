@@ -860,15 +860,18 @@
         },
         
         destroy() {
-            window.removeEventListener('resize', this._boundResize);
-            this.canvas.removeEventListener('wheel', this._boundScroll);
+            if (this._boundHandlers) {
+                window.removeEventListener('resize', this._boundHandlers.resize);
+                this.canvas.removeEventListener('wheel', this._boundHandlers.scroll);
+                this.canvas.removeEventListener('mousemove', this._boundHandlers.mouseMove);
+                this.canvas.removeEventListener('click', this._boundHandlers.click);
+            }
+
             Object.values(this.components).forEach(component => {
                 if (component.clearTextCache) {
                     component.clearTextCache();
                 }
             });
-            this.canvas.removeEventListener('mousemove', this._boundMouseMove);
-            this.canvas.removeEventListener('click', this._boundClick);
         },
         
         handleResize() {
@@ -946,42 +949,59 @@
         }, // <-- Added missing comma here
                 
         bindEvents() {
+            // First, remove any existing event listeners to prevent duplicates
             const fileInput = document.getElementById('fileInput');
-            if (fileInput) {
-                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
-            }
-
             const processBtn = document.getElementById('processBtn');
-            if (processBtn) {
-                processBtn.addEventListener('click', this.processData.bind(this));
-            }
-
             const downloadBtn = document.getElementById('downloadBtn');
-            if (downloadBtn) {
-                downloadBtn.addEventListener('click', this.downloadProcessedData.bind(this));
-            }
-
             const resetBtn = document.getElementById('resetBtn');
-            if (resetBtn) {
-                resetBtn.addEventListener('click', this.reset.bind(this));
-            }
-
             const removalBtn = document.getElementById('removalBtn');
-            if (removalBtn) {
-                removalBtn.addEventListener('click', this.generateRemovalFile.bind(this));
+
+            // Clean up existing bound functions if they exist
+            if (this._boundHandlers) {
+                if (fileInput) fileInput.removeEventListener('change', this._boundHandlers.fileSelect);
+                if (processBtn) processBtn.removeEventListener('click', this._boundHandlers.process);
+                if (downloadBtn) downloadBtn.removeEventListener('click', this._boundHandlers.download);
+                if (resetBtn) resetBtn.removeEventListener('click', this._boundHandlers.reset);
+                window.removeEventListener('resize', this._boundHandlers.resize);
+                this.canvas.removeEventListener('wheel', this._boundHandlers.scroll);
+                this.canvas.removeEventListener('mousemove', this._boundHandlers.mouseMove);
+                this.canvas.removeEventListener('click', this._boundHandlers.click);
             }
 
-            this._boundResize = this.handleResize.bind(this);
-            this._boundScroll = this.handleScroll.bind(this);
-            
-            window.addEventListener('resize', this._boundResize);
-            this.canvas.addEventListener('wheel', this._boundScroll);
+            // Create new bound handlers
+            this._boundHandlers = {
+                fileSelect: this.handleFileSelect.bind(this),
+                process: this.processData.bind(this),
+                download: this.downloadProcessedData.bind(this),
+                reset: this.reset.bind(this),
+                resize: this.handleResize.bind(this),
+                scroll: this.handleScroll.bind(this),
+                mouseMove: this.components.preview?.handleMouseMove.bind(this.components.preview),
+                click: this.components.preview?.handleClick.bind(this.components.preview)
+            };
 
-            this._boundMouseMove = this.components.preview.handleMouseMove.bind(this.components.preview);
-            this._boundClick = this.components.preview.handleClick.bind(this.components.preview);
-            
-            this.canvas.addEventListener('mousemove', this._boundMouseMove);
-            this.canvas.addEventListener('click', this._boundClick);
+            // Add new event listeners
+            if (fileInput) {
+                fileInput.addEventListener('change', this._boundHandlers.fileSelect);
+            }
+            if (processBtn) {
+                processBtn.addEventListener('click', this._boundHandlers.process);
+            }
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', this._boundHandlers.download);
+            }
+            if (resetBtn) {
+                resetBtn.addEventListener('click', this._boundHandlers.reset);
+            }
+
+            window.addEventListener('resize', this._boundHandlers.resize);
+            this.canvas.addEventListener('wheel', this._boundHandlers.scroll);
+
+            // Only add these listeners if the preview component is initialized
+            if (this.components.preview) {
+                this.canvas.addEventListener('mousemove', this._boundHandlers.mouseMove);
+                this.canvas.addEventListener('click', this._boundHandlers.click);
+            }
         },
         
         setState(newState) {
@@ -1130,6 +1150,12 @@
         },
 
         processData: function() {
+            // Prevent multiple simultaneous processing
+            if (this.state.status === 'PROCESSING') {
+                console.log('Already processing, ignoring request');
+                return;
+            }
+
             try {
                 const enableTracking = document.getElementById('enableTracking').checked;
                 const uploaderName = document.getElementById('uploaderName').value;
