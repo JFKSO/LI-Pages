@@ -1363,15 +1363,12 @@
             if (!company && !position) {
                 throw new Error('Both company and position cannot be empty');
             }
-
+            
             let mainToken, prefToken;
 
-            // Determine token type based on documentation rules:
-            // M - No URL provided (minimal information)
-            // S - URL provided (with or without tracking)
-            // T - Additional token when tracking enabled AND URL provided
             if (!url || url === '') {
                 // No URL = Minimal Token (M)
+                // Same person/role should generate same token regardless of uploader
                 mainToken = 'M_' + CryptoJS.SHA256(company + position).toString().substring(0, 16);
                 prefToken = '';
             } else if (enableTracking) {
