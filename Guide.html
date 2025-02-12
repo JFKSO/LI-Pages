@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+            padding-top: 64px !important;
+        }
+        .stage {
+            overflow: auto;
+            position: relative;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #0077b5;
+        }
+        .stage-number {
+            font-weight: bold;
+            color: #0077b5;
+        }
+        .tip {
+            background: #e1f5fe;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .important {
+            background: #fff3e0;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .stage img {
+            width: 600px;
+            height: auto;
+            display: block;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .click-indicator {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #ff4081;
+            background: rgba(255, 64, 129, 0.2);
+            pointer-events: none;
+            animation: none;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.3);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        .section-header {
+            cursor: pointer;
+            padding: 10px;
+            background: #f0f2f5;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-header:hover {
+            background: #e4e6e9;
+        }
+
+        .section-header::before {
+            content: '▼';
+            margin-right: 10px;
+            transition: transform 0.3s;
+        }
+
+        .section-header.collapsed::before {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            transition: max-height 0.3s ease-out;
+            overflow: hidden;
+            max-height: 10000px; /* Adjust based on content height */
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+        }
+
+        .help-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: #0077b5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            text-decoration: none;
+        }
+
+        .help-button::before {
+            content: "Stuck? Message us on Teams for help";
+            position: absolute;
+            right: 60px;
+            bottom: 5px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            color: #333;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            font-weight: normal;
+        }
+
+        .help-button:hover::before {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .help-button:hover {
+            background: #005582;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: #0077b5;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            border: none;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            background: #005582;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .back-button svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Add padding to body to prevent back button overlap */
+        body {
+            padding-top: 70px !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 p-4">
+        <div class="max-w-6xl mx-auto">
+            <button onclick="window.history.back()" class="back-button">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back
+            </button>
+        </div>
+    </div>
+
+    <h1>LinkedIn Network Data Export Guide</h1>
+    
+    <div class="important">
+        <strong>Before you begin:</strong>
+        <ul>
+            <li>This process will take approximately 5-10 minutes</li>
+            <li>Your data will be processed securely in your browser</li>
+            <li>You can remove your data at any time</li>
+            <li>No one will contact your connections without your explicit permission</li>
+        </ul>
+    </div>
+
+    <div class="section" id="download-section">
+        <h2 class="section-header">Download Your LinkedIn Data</h2>
+        <div class="section-content">
+            <div class="stage">
+                <span class="stage-number">1.</span>
+                Navigate to <a href="https://www.linkedin.com" target="_blank">LinkedIn.com</a>
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">2.</span>
+                Click "Me" in the top navigation bar, then select "Settings & Privacy"
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/2.jpeg" alt="Click Me and Settings & Privacy">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">3.</span>
+                Click "Data privacy" in the left sidebar
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/3.jpeg" alt="Click Data privacy">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">4.</span>
+                Click "Get a copy of your data"
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/4.jpeg" alt="Get a copy of your data">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">5.</span>
+                Click "Want something in particular? Select the data files you're most interested in."
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/5.jpeg" alt="Select particular data files">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">6.</span>
+                Select "Connections" from the list
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/6.jpeg" alt="Select Connections">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">7.</span>
+                Click "Download archive"
+                <div class="tip">
+                    LinkedIn will process your request and may send you an email when it's ready. You might need to refresh the page after a few minutes.
+                </div>
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/7.jpeg" alt="Download archive">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">8.</span>
+                Once the file downloads, click on the download notification to unzip or decompress the file. The unzipped folder will contain several files, including "connections.csv"
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="process-section">
+        <h2 class="section-header collapsed">Process Your Data</h2>
+        <div class="section-content collapsed">
+            <div class="stage">
+                <span class="stage-number">9.</span>
+                Navigate to our browser-based processing tool using your custom individual link (provided by your Growth contact)
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">10.</span>
+                Click "Start contributing now" to scroll to the tool
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/10.jpeg" alt="Start contributing now">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">11.</span>
+                Click "I've Downloaded My Data"
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/11.jpeg" alt="I've Downloaded My Data">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">12.</span>
+                Click "Go to Upload Page"
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/12.jpeg" alt="Go to Upload Page">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">13.</span>
+                Verify or update your name in the "Your Name" text box
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">14.</span>
+                Click "Choose File"
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/14.jpeg" alt="Choose File">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">15.</span>
+                Navigate to and select the connections.csv file you downloaded
+                <div class="tip">
+                    You can upload the file in its original format. Pre-filtering the contents is optional and not required, as the data will be processed directly in your browser before any information is uploaded to our secure tool.
+                </div>
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/15.jpeg" alt="Select connections.csv file">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">16.</span>
+                Click "Process Data" and wait for the preview of processed results
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/16.jpeg" alt="Process Data">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">17.</span>
+                Click "Download Results"
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/17.jpeg" alt="Download Results">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">18.</span>
+                Click "Open SharePoint Folder"
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/18.jpeg" alt="Open SharePoint Folder">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">19.</span>
+                Click "Upload"
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/19.jpeg" alt="Click Upload">
+            </div>
+
+            <div class="stage">
+                <span class="stage-number">20.</span>
+                Click on 'Files' and locate the processed file in your downloads folder
+                <div class="tip">
+                    Look for the newly downloaded file (not the raw LinkedIn export). The filename starts with "U" followed by a letter, then an underscore (_)
+                </div>
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/20.jpeg" alt="Locate processed file">
+            </div>
+
+            <div class="stage" style="margin-bottom: 60px;">
+                <span class="stage-number">21.</span>
+                Your file is now uploaded and after a short wait, will have been moved to a private, secure location for processing
+                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/21.jpeg" alt="File uploaded and moved">
+            </div>
+        </div>
+    </div>
+
+    <div class="important" style="margin-top: 30px;">
+        <strong>What happens next?</strong>
+        <p>We'll analyse your data to identify marketing roles and senior decision-makers within brands where we have high coverage. Your network's privacy is protected through anonymisation, and we'll follow up separately about any requests to connect.</p>
+    </div>
+
+    <script>
+        const ENABLE_INDICATOR_PLACEMENT = false;
+
+        const predefinedIndicators = [
+            { image: "Click Me and Settings & Privacy", top: 224.4609375, left: 326 },
+            { image: "Click Data privacy", top: 284.0703125, left: 81 },
+            { image: "Get a copy of your data", top: 161.0234375, left: 290 },
+            { image: "Select particular data files", top: 204.484375, left: 208 },
+            { image: "Select Connections", top: 229.40625, left: 347 },
+            { image: "Download archive", top: 382.140625, left: 257 },
+            { image: "Start contributing now", top: 341.2890625, left: 287 },
+            { image: "I've Downloaded My Data", top: 220.2109375, left: 110 },
+            { image: "Go to Upload Page", top: 338.1328125, left: 89 },
+            { image: "Choose File", top: 339.4609375, left: 62 },
+            { image: "Process Data", top: 208.1171875, left: 86 },
+            { image: "Download Results", top: 353.5546875, left: 146 },
+            { image: "Open SharePoint Folder", top: 437.4765625, left: 141 },
+            { image: "Click Upload", top: 128, left: 124 },
+            { image: "Locate processed file", top: 235.1328125, left: 105 }
+        ];
+
+        function addPredefinedIndicators() {
+            document.querySelectorAll('.stage img').forEach(img => {
+                const indicators = predefinedIndicators.filter(ind => ind.image === img.alt);
+                indicators.forEach(ind => {
+                    const indicator = document.createElement('div');
+                    indicator.className = 'click-indicator';
+                    indicator.style.top = ind.top + 'px';
+                    indicator.style.left = ind.left + 'px';
+                    img.parentElement.appendChild(indicator);
+                });
+            });
+        }
+
+        function enableIndicatorPlacement() {
+            if (!ENABLE_INDICATOR_PLACEMENT) return;
+            
+            const indicatorHistory = [];
+
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'z') {
+                    e.preventDefault();
+                    if (indicatorHistory.length > 0) {
+                        const lastIndicator = indicatorHistory.pop();
+                        lastIndicator.remove();
+                    }
+                }
+            });
+
+            document.querySelectorAll('.stage img').forEach(img => {
+                img.onclick = function(e) {
+                    const rect = e.target.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = (e.clientY - rect.top) + 40;
+                    
+                    console.log(`For image ${e.target.alt}:`);
+                    console.log(`<div class="click-indicator" style="top: ${y}px; left: ${x}px;"></div>`);
+                    
+                    const indicator = document.createElement('div');
+                    indicator.className = 'click-indicator';
+                    indicator.style.top = y + 'px';
+                    indicator.style.left = x + 'px';
+                    e.target.parentElement.appendChild(indicator);
+                    
+                    indicatorHistory.push(indicator);
+                };
+            });
+        }
+
+        function setupCollapsibleSections() {
+            document.querySelectorAll('.section-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.classList.toggle('collapsed');
+                    header.nextElementSibling.classList.toggle('collapsed');
+                });
+            });
+        }
+
+        function setInitialState() {
+            // Check URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const showProcess = urlParams.get('process') === 'true';
+            
+            if (showProcess) {
+                // Collapse download section
+                document.querySelector('#download-section .section-header').classList.add('collapsed');
+                document.querySelector('#download-section .section-content').classList.add('collapsed');
+                
+                // Expand process section
+                document.querySelector('#process-section .section-header').classList.remove('collapsed');
+                document.querySelector('#process-section .section-content').classList.remove('collapsed');
+            }
+        }
+
+        function setupScrollAnimations() {
+            // Create the observer
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Find all indicators in this stage
+                        const indicators = entry.target.querySelectorAll('.click-indicator');
+                        indicators.forEach(indicator => {
+                            // Remove any existing animation
+                            indicator.style.animation = 'none';
+                            // Force reflow
+                            indicator.offsetHeight;
+                            // Add the pulse animation (just once)
+                            indicator.style.animation = 'pulse 1s 1';
+                        });
+                        
+                        // Removed the unobserve line so it repeats on scroll back
+                    }
+                });
+            }, {
+                threshold: 0.5 // Trigger when 50% of the element is visible
+            });
+
+            // Observe all stages that have images (and thus indicators)
+            document.querySelectorAll('.stage').forEach(stage => {
+                if (stage.querySelector('img')) {
+                    observer.observe(stage);
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupCollapsibleSections();
+            setInitialState();
+            addPredefinedIndicators();
+            enableIndicatorPlacement();
+            setupScrollAnimations();
+
+            if (document.referrer.includes('processor.html')) {
+                document.querySelector('.back-button').style.display = 'flex';
+            } else {
+                document.querySelector('.back-button').style.display = 'none';
+            }
+        });
+    </script>
+
+    <a href="https://teams.microsoft.com/l/chat/0/0?users=elliot.dacosta@kinesso.com" class="help-button" target="_blank">?</a>
+</body>
+</html>
