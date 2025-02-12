@@ -38,8 +38,54 @@
             margin-top: 1.5rem; /* Reduce spacing above the button */
             margin-bottom: 0;   /* Remove excess spacing below */
         }
-    </style>
-    
+        .help-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        background: #0077b5;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        text-decoration: none;
+    }
+
+    .help-button::before {
+        content: "Stuck? Click for step-by-step guide";
+        position: absolute;
+        right: 60px;
+        bottom: 5px;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        white-space: nowrap;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        color: #333;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        font-weight: normal;
+    }
+
+    .help-button:hover::before {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .help-button:hover {
+        background: #005582;
+    }
+</style>   
 </head>
 <body class="bg-gray-50">
     <!-- Access Protection Overlay -->
