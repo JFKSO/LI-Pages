@@ -189,7 +189,7 @@
 <body>
     <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 p-4">
         <div class="max-w-6xl mx-auto">
-            <button onclick="window.history.back()" class="back-button">
+            <button class="back-button" style="display: none;">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                 </svg>
@@ -481,32 +481,29 @@
             });
         }
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    setupCollapsibleSections();
-    setInitialState();
-    addPredefinedIndicators();
-    enableIndicatorPlacement();
-    setupScrollAnimations();
+        document.addEventListener('DOMContentLoaded', () => {
+            setupCollapsibleSections();
+            setInitialState();
+            addPredefinedIndicators();
+            enableIndicatorPlacement();
+            setupScrollAnimations();
 
-    // Update the back button logic
-    const backButton = document.querySelector('.back-button');
-    if (backButton) {
-        // Show back button if we came from either page
-        if (document.referrer.includes('processor.html') || document.referrer.includes('content.html')) {
-            backButton.style.display = 'flex';
-            
-            // Update the back button to close the current tab instead of using history
-            backButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                window.close();
-            });
-        } else {
-            backButton.style.display = 'none';
-        }
-    }
-});
-</script>
+            // Handle back button visibility and behavior
+            const backButton = document.querySelector('.back-button');
+            if (backButton) {
+                // Show back button if we came from either page
+                if (document.referrer.includes('processor.html') || document.referrer.includes('content.html')) {
+                    backButton.style.display = 'flex';
+                    
+                    // Update the back button to close the current tab instead of using history
+                    backButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        window.close();
+                    });
+                }
+            }
+        });
+    </script>
 
     <a href="https://teams.microsoft.com/l/chat/0/0?users=elliot.dacosta@kinesso.com" class="help-button" target="_blank">?</a>
 </body>
