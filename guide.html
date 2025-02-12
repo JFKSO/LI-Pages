@@ -481,20 +481,32 @@
             });
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            setupCollapsibleSections();
-            setInitialState();
-            addPredefinedIndicators();
-            enableIndicatorPlacement();
-            setupScrollAnimations();
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    setupCollapsibleSections();
+    setInitialState();
+    addPredefinedIndicators();
+    enableIndicatorPlacement();
+    setupScrollAnimations();
 
-            if (document.referrer.includes('processor.html')) {
-                document.querySelector('.back-button').style.display = 'flex';
-            } else {
-                document.querySelector('.back-button').style.display = 'none';
-            }
-        });
-    </script>
+    // Update the back button logic
+    const backButton = document.querySelector('.back-button');
+    if (backButton) {
+        // Show back button if we came from either page
+        if (document.referrer.includes('processor.html') || document.referrer.includes('content.html')) {
+            backButton.style.display = 'flex';
+            
+            // Update the back button to close the current tab instead of using history
+            backButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.close();
+            });
+        } else {
+            backButton.style.display = 'none';
+        }
+    }
+});
+</script>
 
     <a href="https://teams.microsoft.com/l/chat/0/0?users=elliot.dacosta@kinesso.com" class="help-button" target="_blank">?</a>
 </body>
