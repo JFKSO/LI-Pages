@@ -32,7 +32,53 @@
         .step-animation:hover {
             transform: translateX(8px);
         }
-    </style>
+        .help-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        background: #0077b5;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        z-index: 1000;
+        text-decoration: none;
+    }
+
+    .help-button .tooltip {
+        position: absolute;
+        right: 60px;
+        bottom: 5px;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 14px;
+        white-space: nowrap;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        color: #333;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        font-weight: normal;
+    }
+
+    .help-button:hover .tooltip {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .help-button:hover {
+        background: #005582;
+    }
+</style>
 </head>
 <body class="min-h-screen p-8 pt-20 bg-gray-50">
     <!-- Back Icon -->
@@ -1525,11 +1571,9 @@
     }
     </script>
     <!-- Help Button -->
-    <a href="guide.html" target="_blank" class="fixed bottom-5 right-5 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-lg hover:bg-blue-700 transition-colors duration-200 z-50 group">
+    <a href="guide.html" target="_blank" class="help-button">
         ?
-        <span class="absolute right-16 bottom-0 bg-white px-3 py-2 rounded text-sm text-gray-700 shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap">
-            Stuck? Click for step-by-step guide
-        </span>
+        <span class="tooltip">Stuck? Click for step-by-step guide</span>
     </a>
 </body>
 </html>
