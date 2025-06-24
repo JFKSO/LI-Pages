@@ -1,546 +1,1439 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLM Programme Analytics - Cinematic Launch</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --primary-blue: #2563eb;
+            --primary-blue-light: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --success-green: #10b981;
+            --warning-amber: #f59e0b;
+            --error-red: #ef4444;
+            --neutral-50: #f8fafc;
+            --neutral-100: #f1f5f9;
+            --neutral-200: #e2e8f0;
+            --neutral-300: #cbd5e1;
+            --neutral-400: #94a3b8;
+            --neutral-500: #64748b;
+            --neutral-600: #475569;
+            --neutral-700: #334155;
+            --neutral-800: #1e293b;
+            --neutral-900: #0f172a;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-medium: 0 8px 40px rgba(0, 0, 0, 0.12);
+            --shadow-strong: 0 16px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: linear-gradient(135deg, #0a0f1c 0%, #1e293b 100%);
+            color: white;
             line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            color: #333;
-            padding-top: 64px !important;
-        }
-        .stage {
-            overflow: auto;
+            overflow-x: hidden;
+            overflow-y: auto;
+            min-height: 100vh;
+            width: 100vw;
             position: relative;
-            margin: 30px 0;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 5px;
-        }
-        .stage-number {
-            font-weight: bold;
-            color: #0077b5;
-        }
-        .tip {
-            background: #e1f5fe;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        .important {
-            background: #fff3e0;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-        }
-        .stage img {
-            width: 600px;
-            height: auto;
-            display: block;
-            margin: 15px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .click-indicator {
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 3px solid #ff4081;
-            background: rgba(255, 64, 129, 0.2);
-            pointer-events: none;
-            animation: none;
-        }
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.3);
-                opacity: 0.7;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-        .section-header {
-            cursor: pointer;
-            padding: 10px;
-            background: #f0f2f5;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
+            transition: all 0.5s ease;
         }
 
-        .section-header:hover {
-            background: #e4e6e9;
+        /* Light theme styles */
+        body.light-theme {
+            background: linear-gradient(135deg, var(--neutral-50) 0%, #ffffff 100%);
+            color: var(--neutral-800);
         }
 
-        .section-header::before {
-            content: '▼';
-            margin-right: 10px;
-            transition: transform 0.3s;
+        body.light-theme .pre-intro {
+            background: linear-gradient(135deg, var(--neutral-50) 0%, #ffffff 100%);
         }
 
-        .section-header.collapsed::before {
-            transform: rotate(-90deg);
+        body.light-theme .pre-intro-title {
+            color: var(--neutral-900);
         }
 
-        .section-content {
-            transition: max-height 0.3s ease-out;
-            overflow: hidden;
-            max-height: 10000px; /* Adjust based on content height */
+        body.light-theme .pre-intro-subtitle {
+            color: var(--neutral-600);
         }
 
-        .section-content.collapsed {
-            max-height: 0;
+        body.light-theme .grid-bg {
+            background-image: 
+                linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px);
         }
 
-        .help-button {
+        body.light-theme .logo-space {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--glass-border);
+        }
+
+        body.light-theme .logo-space img {
+            filter: none;
+        }
+
+        body.light-theme .logo-placeholder {
+            color: var(--neutral-700);
+        }
+
+        body.light-theme .brand-text {
+            color: var(--neutral-700);
+        }
+
+        body.light-theme .hero-title {
+            background: linear-gradient(135deg, var(--neutral-900) 0%, var(--neutral-700) 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        body.light-theme .hero-subtitle {
+            color: var(--neutral-600);
+        }
+
+        body.light-theme .hero-description {
+            color: var(--neutral-500);
+        }
+
+        body.light-theme .preview-container {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--glass-border);
+        }
+
+        body.light-theme .metric-card,
+        body.light-theme .tech-card {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid var(--glass-border);
+        }
+
+        body.light-theme .metric-value,
+        body.light-theme .tech-metric {
+            color: var(--primary-blue);
+            text-shadow: none;
+        }
+
+        body.light-theme .metric-label,
+        body.light-theme .tech-label {
+            color: var(--neutral-500);
+        }
+
+        body.light-theme .tech-desc,
+        body.light-theme .complexity-challenge {
+            color: var(--neutral-600);
+        }
+
+        body.light-theme .status-indicator {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--neutral-700);
+        }
+
+        body.light-theme .nav-tab {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid var(--glass-border);
+            color: var(--neutral-700);
+        }
+
+        body.light-theme .nav-tab.active {
+            background: rgba(37, 99, 235, 0.1);
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+
+        body.light-theme .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: var(--accent-cyan);
+        }
+
+        body.light-theme .theme-toggle {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid var(--glass-border);
+            color: var(--neutral-700);
+        }
+
+        body.light-theme .screenshot-placeholder {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: var(--glass-border);
+            color: var(--neutral-600);
+        }
+
+        body.light-theme .screenshot-title {
+            color: var(--neutral-700);
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
             width: 50px;
             height: 50px;
-            background: #0077b5;
-            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             transition: all 0.3s ease;
-            z-index: 1000;
-            text-decoration: none;
+            z-index: 9999;
+            font-size: 20px;
         }
 
-        .help-button::before {
-            content: "Stuck? Message us on Teams for help";
-            position: absolute;
-            right: 60px;
-            bottom: 5px;
-            background: white;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 14px;
-            white-space: nowrap;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            color: #333;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-            font-weight: normal;
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
         }
 
-        .help-button:hover::before {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .help-button:hover {
-            background: #005582;
-        }
-
-        .back-button {
+        /* Animated background grid */
+        .grid-bg {
             position: fixed;
-            top: 20px;
-            left: 20px;
-            padding: 10px 20px;
-            background: #0077b5;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(37, 99, 235, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(37, 99, 235, 0.1) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridMove 20s linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(60px, 60px); }
+        }
+
+        /* Ambient light effects */
+        .light-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .light-orb.blue {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.3), transparent);
+            top: 10%;
+            right: 20%;
+            animation-delay: 0s;
+        }
+
+        .light-orb.cyan {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.2), transparent);
+            bottom: 20%;
+            left: 15%;
+            animation-delay: -4s;
+        }
+
+        .light-orb.green {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.15), transparent);
+            top: 60%;
+            right: 10%;
+            animation-delay: -2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+        }
+
+        /* Pre-intro sequence */
+        .pre-intro {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0f1c 0%, #1e293b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeOut 2s ease-out 3s forwards;
+        }
+
+        .pre-intro-text {
+            text-align: center;
+            z-index: 1001;
+        }
+
+        .pre-intro-title {
+            font-size: clamp(24px, 6vw, 48px);
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-out 0.5s forwards;
+        }
+
+        .pre-intro-subtitle {
+            font-size: clamp(14px, 3vw, 18px);
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 400;
+            opacity: 0;
+            animation: fadeInUp 1.5s ease-out 1.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            0% { opacity: 1; }
+            100% { opacity: 0; pointer-events: none; }
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Main slide container */
+        .slide-container {
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            animation: slideIn 2s ease-out 4s forwards;
+        }
+
+        @keyframes slideIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Header section */
+        .header {
+            padding: clamp(20px, 4vw, 40px) clamp(20px, 5vw, 60px) 0;
+            z-index: 20;
+            position: relative;
+        }
+
+        .logo-brand {
+            display: flex;
+            align-items: center;
+            gap: clamp(12px, 2vw, 20px);
+            opacity: 0;
+            animation: slideInLeft 1.5s ease-out 5s forwards;
+        }
+
+        .logo-space {
+            width: clamp(240px, 24vw, 300px);
+            height: clamp(90px, 15vw, 130px);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-soft);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            padding: 15px 10px;
+        }
+
+        .logo-space img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: all 0.3s ease;
+        }
+
+        /* Fallback text when no logo */
+        .logo-placeholder {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: clamp(11px, 1.5vw, 13px);
+            text-align: center;
+        }
+
+        .logo-space::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: logoShimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes logoShimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .brand-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: clamp(16px, 2.5vw, 20px);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Main content area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 clamp(20px, 5vw, 60px);
+            position: relative;
+            z-index: 20;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: clamp(40px, 8vw, 80px);
+            max-width: 1400px;
+            width: 100%;
+            align-items: center;
+        }
+
+        .hero-text {
+            opacity: 0;
+            animation: slideInLeft 1.5s ease-out 5.5s forwards;
+        }
+
+        .hero-title {
+            font-size: clamp(42px, 9vw, 84px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.05;
+            background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: clamp(20px, 3vw, 28px);
+            position: relative;
+        }
+
+        .hero-title::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 0;
+            width: 120px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-cyan));
+            border-radius: 2px;
+            opacity: 0;
+            animation: expandLine 2s ease-out 6.5s forwards;
+        }
+
+        @keyframes expandLine {
+            0% { width: 0; opacity: 0; }
+            50% { opacity: 1; }
+            100% { width: 120px; opacity: 1; }
+        }
+
+        .hero-subtitle {
+            font-size: clamp(20px, 4vw, 28px);
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
+            line-height: 1.3;
+            margin-bottom: clamp(24px, 4vw, 32px);
+        }
+
+        .hero-description {
+            font-size: clamp(16px, 2.8vw, 18px);
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+            margin-bottom: clamp(32px, 5vw, 40px);
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
             color: white;
-            border-radius: 5px;
-            text-decoration: none;
+            border: none;
+            padding: clamp(16px, 2.5vw, 20px) clamp(32px, 5vw, 40px);
+            border-radius: 12px;
+            font-size: clamp(16px, 2.8vw, 18px);
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 40px rgba(37, 99, 235, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 60px rgba(37, 99, 235, 0.4);
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        .cta-subtext {
+            font-size: clamp(12px, 2vw, 14px);
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            margin-top: 8px;
+            text-align: left;
+        }
+
+        body.light-theme .cta-subtext {
+            color: var(--neutral-500);
+        }
+
+        /* Right panel with navigation tabs */
+        .dashboard-preview {
+            position: relative;
+            opacity: 0;
+            animation: slideInRight 1.5s ease-out 6s forwards;
+        }
+
+        /* Navigation tabs - AUTO PROGRESS INDICATOR */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            justify-content: center;
+        }
+
+        .nav-tab {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: clamp(11px, 1.8vw, 13px);
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-tab.active {
+            background: rgba(37, 99, 235, 0.2);
+            border-color: var(--primary-blue);
+            color: var(--accent-cyan);
+        }
+
+        .nav-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-cyan);
+        }
+
+        /* Auto-progress bar */
+        .nav-tab::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: var(--accent-cyan);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .nav-tab.active::after {
+            animation: progressBar 4s linear;
+        }
+
+        @keyframes progressBar {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Content container - DYNAMIC HEIGHT */
+        .preview-container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: clamp(24px, 3vw, 32px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            min-height: 450px;
+            height: auto;
+        }
+
+        /* Extend only for Intelligence tab */
+        .preview-container:has(#tech.active) {
+            min-height: 520px;
+        }
+
+        .preview-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-cyan));
+            opacity: 0;
+            animation: topGlow 3s ease-in-out 7s infinite;
+        }
+
+        @keyframes topGlow {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        /* Content sections */
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeInContent 0.5s ease-out;
+        }
+
+        @keyframes fadeInContent {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Metrics section */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(16px, 2.5vw, 20px);
+            margin-bottom: clamp(24px, 3vw, 32px);
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: clamp(16px, 2.5vw, 20px);
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.02), transparent);
+            transform: translateX(-100%);
+            animation: cardShimmer 4s ease-in-out infinite;
+        }
+
+        .metric-card:nth-child(1)::before { animation-delay: 0s; }
+        .metric-card:nth-child(2)::before { animation-delay: -1s; }
+        .metric-card:nth-child(3)::before { animation-delay: -2s; }
+        .metric-card:nth-child(4)::before { animation-delay: -3s; }
+
+        @keyframes cardShimmer {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .metric-value {
+            font-size: clamp(22px, 4vw, 32px);
+            font-weight: 700;
+            color: var(--accent-cyan);
+            line-height: 1;
+            margin-bottom: 8px;
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+        }
+
+        .metric-label {
+            font-size: clamp(11px, 1.8vw, 13px);
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Tech section */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(16px, 2.5vw, 20px);
+            margin-bottom: clamp(20px, 3vw, 24px);
+        }
+
+        /* Complexity showcase */
+        .complexity-list {
+            margin-top: 16px;
+        }
+
+        .complexity-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: clamp(10px, 2vw, 14px);
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .tech-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: clamp(14px, 2.5vw, 18px);
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tech-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+
+        .tech-icon {
+            font-size: clamp(18px, 3vw, 22px);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .tech-metric {
+            font-size: clamp(16px, 3vw, 20px);
+            font-weight: 700;
+            color: var(--accent-cyan);
+            line-height: 1;
+            margin-bottom: 4px;
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .tech-label {
+            font-size: clamp(11px, 1.8vw, 13px);
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2px;
+        }
+
+        .tech-desc {
+            font-size: clamp(10px, 1.5vw, 11px);
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.3;
+        }
+
+        .complexity-challenge {
+            font-size: clamp(11px, 1.9vw, 12px);
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .complexity-solution {
+            font-size: clamp(10px, 1.7vw, 11px);
+            color: var(--success-green);
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .complexity-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(6, 182, 212, 0.2);
+        }
+
+        /* Screenshot section - BETTER LAYOUT */
+        .screenshot-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            padding: 10px 0;
+            min-height: 320px;
+            height: 100%;
+        }
+
+        .screenshot-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-bottom: 12px;
+            position: relative;
+            min-height: 220px;
+        }
+
+        .screenshot-bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .screenshot-image {
+            max-width: 100%;
+            max-height: 250px;
+            width: auto;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            object-fit: contain;
+            transition: all 0.5s ease;
+            opacity: 0.85;
+        }
+
+        .screenshot-placeholder {
+            background: linear-gradient(135deg, 
+                rgba(37, 99, 235, 0.1) 0%, 
+                rgba(6, 182, 212, 0.05) 100%);
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: clamp(20px, 4vw, 30px);
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .screenshot-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, 
+                transparent 40%, 
+                rgba(37, 99, 235, 0.1) 50%, 
+                transparent 60%);
+            animation: shimmer 2s infinite;
+        }
+
+        .screenshot-nav {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-top: auto;
+        }
+
+        .screenshot-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .screenshot-dot.active {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
+        }
+
+        .screenshot-title {
+            font-size: clamp(11px, 1.8vw, 13px);
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            margin-bottom: 8px;
+            min-height: 20px;
+        }
+
+        /* Status indicators */
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .status-indicator {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            z-index: 1000;
-            border: none;
-            cursor: pointer;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 6px 14px;
+            font-size: clamp(10px, 1.5vw, 12px);
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
         }
 
-        .back-button:hover {
-            background: #005582;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        .status-pulse {
+            width: 6px;
+            height: 6px;
+            background: var(--success-green);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 10px var(--success-green);
         }
 
-        .back-button svg {
-            width: 16px;
-            height: 16px;
+        @keyframes pulse {
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            50% { 
+                opacity: 0.8; 
+                transform: scale(1.2);
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
         }
 
-        /* Add padding to body to prevent back button overlap */
-        body {
-            padding-top: 70px !important;
+        /* Smooth entrance animations */
+        @keyframes slideInLeft {
+            0% {
+                opacity: 0;
+                transform: translateX(-80px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            0% {
+                opacity: 0;
+                transform: translateX(80px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: clamp(30px, 6vw, 40px);
+                text-align: center;
+            }
+            
+            .hero-title::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .status-row {
+                justify-content: center;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+                gap: 4px;
+            }
+            
+            .metrics-grid,
+            .tech-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="fixed top-0 left-0 right-0 bg-white shadow-md z-50 p-4">
-        <div class="max-w-6xl mx-auto">
-            <button class="back-button" style="display: none;">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-                Back
-            </button>
+    <!-- Theme toggle button -->
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
+        🌙
+    </button>
+
+    <!-- Pre-intro sequence -->
+    <div class="pre-intro">
+        <div class="pre-intro-text">
+            <h1 class="pre-intro-title">Programme Intelligence</h1>
+            <p class="pre-intro-subtitle">Advanced Analytics • Real-time Insights • Strategic Intelligence</p>
         </div>
     </div>
 
-    <h1>LinkedIn Network Data Export Guide</h1>
+    <!-- Animated background elements -->
+    <div class="grid-bg"></div>
+    <div class="light-orb blue"></div>
+    <div class="light-orb cyan"></div>
+    <div class="light-orb green"></div>
     
-    <div class="important">
-        <strong>
-        ⚠️ Important: Please ensure you are logged into SharePoint and have visited 
-        <a href="https://interpublic.sharepoint.com/_layouts/15/sharepoint.aspx" target="_blank">Mediabrands Sharepoint</a>
-        at least once before proceeding. This guide requires SharePoint access to load the guide images below and use the data processing tool.
-        </strong>
-        <ul>
-            <li>This process will take approximately 5-10 minutes</li>
-            <li>Your data will be processed securely in your browser</li>
-            <li>You can remove your data at any time</li>
-            <li>No one will contact your connections without your explicit permission</li>
-        </ul>
-    </div>
-
-    <div class="section" id="download-section">
-        <h2 class="section-header">Download Your LinkedIn Data</h2>
-        <div class="section-content">
-            <div class="stage">
-                <span class="stage-number">1.</span>
-                Navigate to <a href="https://www.linkedin.com" target="_blank">LinkedIn.com</a>
+    <div class="slide-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-brand">
+                <div class="logo-space">
+                    <img id="logo-img" src="" alt="CLM Programme" style="display: none;" />
+                    <div class="logo-placeholder" id="logo-placeholder">CLM PROGRAMME</div>
+                </div>
+                <div class="brand-text">Analytics Suite</div>
             </div>
+        </header>
 
-            <div class="stage">
-                <span class="stage-number">2.</span>
-                Click "Me" in the top navigation bar, then select "Settings & Privacy"
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/2.jpeg" alt="Click Me and Settings & Privacy">
-            </div>
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="content-grid">
+                <!-- Hero Text -->
+                <div class="hero-text">
+                    <h1 class="hero-title">CLM Analytics Suite</h1>
+                    <p class="hero-subtitle">Real-time programme intelligence for strategic decision making</p>
+                    <p class="hero-description">
+                        Comprehensive attendance tracking, engagement analytics, and performance insights 
+                        across all CLM sessions and training initiatives. Transform data into actionable intelligence.
+                    </p>
+                    <button class="cta-button" onclick="window.open('https://app.powerbi.com/links/fCstNjzpCD?ctid=d026e4c1-5892-497a-b9da-ee493c9f0364&pbi_source=linkShare', '_blank')">Launch Dashboard</button>
+                    <p class="cta-subtext">*PowerBI license required</p>
+                </div>
 
-            <div class="stage">
-                <span class="stage-number">3.</span>
-                Click "Data privacy" in the left sidebar
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/3.jpeg" alt="Click Data privacy">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">4.</span>
-                Click "Get a copy of your data"
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/4.jpeg" alt="Get a copy of your data">
-            </div>
-
-            <div class="important" style="margin: 20px 0;">
-                <strong>Important: Two Download Options</strong>
-                <p>LinkedIn offers two different ways to download your connections:</p>
-                
-                <div style="display: flex; margin: 15px 0;">
-                    <div style="flex: 1; padding-right: 15px; border-right: 1px solid #ccc;">
-                        <strong>Option A: Direct Download (Steps 5-7)</strong>
-                        <p>If you see the option to select specific data files (as shown in the following steps), follow steps 5-7 to download just your connections.</p>
+                <!-- Interactive Preview Panel -->
+                <div class="dashboard-preview">
+                    <!-- Navigation Tabs -->
+                    <div class="nav-tabs">
+                        <div class="nav-tab active" onclick="showSection('metrics')">Overview</div>
+                        <div class="nav-tab" onclick="showSection('tech')">Intelligence</div>
+                        <div class="nav-tab" onclick="showSection('screenshots')">Screenshots</div>
                     </div>
-                    <div style="flex: 1; padding-left: 15px;">
-                        <strong>Option B: Full Archive Download</strong>
-                        <p>If you don't see the option to select specific files:</p>
-                        <ol>
-                            <li>Look for and click "Request archive"</li>
-                            <li>Download the complete archive (.zip file) when ready</li>
-                            <li>Extract/unzip the archive</li>
-                            <li>Find the "connections.csv" file (not "contacts.csv")</li>
-                            <li>Skip to step 8</li>
-                        </ol>
-                        <p>You only need the connections.csv file, so you can safely delete everything else from the archive.</p>
+
+                    <div class="preview-container">
+                        <!-- Metrics Section -->
+                        <div class="content-section active" id="metrics">
+                            <div class="metrics-grid">
+                                <div class="metric-card">
+                                    <div class="metric-value">626</div>
+                                    <div class="metric-label">Engaged Employees</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-value">67%+</div>
+                                    <div class="metric-label">Attendance Rate</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-value">15</div>
+                                    <div class="metric-label">Training Sessions</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-value">22</div>
+                                    <div class="metric-label">Individual Sessions</div>
+                                </div>
+                            </div>
+                            
+                            <div class="status-row">
+                                <div class="status-indicator">
+                                    <div class="status-pulse"></div>
+                                    Live Data
+                                </div>
+                                <div class="status-indicator">
+                                    Multi-Source
+                                </div>
+                                <div class="status-indicator">
+                                    Enterprise Ready
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Technical Intelligence Section -->
+                        <div class="content-section" id="tech">
+                            <div class="tech-grid">
+                                <div class="tech-card">
+                                    <div class="tech-icon">🔗</div>
+                                    <div class="tech-metric">3</div>
+                                    <div class="tech-label">Data Sources</div>
+                                    <div class="tech-desc">Manual, QR, Teams</div>
+                                </div>
+                                <div class="tech-card">
+                                    <div class="tech-icon">✅</div>
+                                    <div class="tech-metric">15+</div>
+                                    <div class="tech-label">Quality Checks</div>
+                                    <div class="tech-desc">Automatic validation</div>
+                                </div>
+                                <div class="tech-card">
+                                    <div class="tech-icon">🎯</div>
+                                    <div class="tech-metric">100%</div>
+                                    <div class="tech-label">Automated</div>
+                                    <div class="tech-desc">No manual work</div>
+                                </div>
+                                <div class="tech-card">
+                                    <div class="tech-icon">📊</div>
+                                    <div class="tech-metric">Real-time</div>
+                                    <div class="tech-label">Intelligence</div>
+                                    <div class="tech-desc">Live insights</div>
+                                </div>
+                            </div>
+
+                            <div class="complexity-list">
+                                <div class="complexity-item">
+                                    <div class="complexity-challenge">7+ file formats with inconsistent naming</div>
+                                    <div class="complexity-solution">→ Dynamic file discovery & format detection</div>
+                                </div>
+                                <div class="complexity-item">
+                                    <div class="complexity-challenge">Multiple sign-ins per person per session</div>
+                                    <div class="complexity-solution">→ Intelligent deduplication with priority rules</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Screenshots Section -->
+                        <div class="content-section" id="screenshots">
+                            <div class="screenshot-container">
+                                <div class="screenshot-display" id="screenshot-display">
+                                    <div class="screenshot-placeholder">
+                                        <div class="screenshot-icon">📸</div>
+                                        <div class="screenshot-text">Dashboard Screenshots</div>
+                                        <div class="screenshot-note">Add your dashboard screenshots here</div>
+                                    </div>
+                                </div>
+                                <div class="screenshot-bottom">
+                                    <div class="screenshot-nav" id="screenshot-nav"></div>
+                                    <div class="screenshot-title" id="screenshot-title"></div>
+                                    <div class="status-row">
+                                        <div class="status-indicator">
+                                            Agency Performance
+                                        </div>
+                                        <div class="status-indicator">
+                                            Individual Progress
+                                        </div>
+                                        <div class="status-indicator">
+                                            Session Analytics
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <div class="stage">
-                <span class="stage-number">5.</span>
-                Click "Want something in particular? Select the data files you're most interested in."
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/5.jpeg" alt="Select particular data files">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">6.</span>
-                Select "Connections" from the list
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/6.jpeg" alt="Select Connections">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">7.</span>
-                Click "Download archive"
-                <div class="tip">
-                    LinkedIn will process your request and may send you an email when it's ready. You might need to refresh the page after a few minutes.
-                </div>
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/7.jpeg" alt="Download archive">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">8.</span>
-                Prepare your connections.csv file
-                <p>Depending on which download option you used:</p>
-                <ul>
-                    <li><strong>If you followed Option A (steps 5-7):</strong> You should have a file named "connections.csv"</li>
-                    <li><strong>If you followed Option B (full archive):</strong> Extract the .zip file and locate the "connections.csv" file</li>
-                </ul>
-                <div class="tip">
-                    <strong>Important:</strong> Make sure you're using the "connections.csv" file, not "contacts.csv" which is a different file. The connections.csv file is the only one we need for processing, so you can safely delete any other files from the archive.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="section" id="process-section">
-        <h2 class="section-header collapsed">Process Your Data</h2>
-        <div class="section-content collapsed">
-            <div class="stage">
-                <span class="stage-number">9.</span>
-                Navigate to our browser-based processing tool using your custom individual link (provided by your Growth contact)
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">10.</span>
-                Click "Start contributing now" to scroll to the tool
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/10.jpeg" alt="Start contributing now">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">11.</span>
-                Click "I've Downloaded My Data"
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/11.jpeg" alt="I've Downloaded My Data">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">12.</span>
-                Click "Go to Upload Page"
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/12.jpeg" alt="Go to Upload Page">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">13.</span>
-                Verify or update your name in the "Your Name" text box
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">14.</span>
-                Click "Choose File"
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/14.jpeg" alt="Choose File">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">15.</span>
-                Navigate to and select the connections.csv file you downloaded
-                <div class="tip">
-                    You can upload the file in its original format. Pre-filtering the contents is optional and not required, as the data will be processed directly in your browser before any information is uploaded to our secure tool.
-                </div>
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/15.jpeg" alt="Select connections.csv file">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">16.</span>
-                Click "Process Data" and wait for the preview of processed results
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/16.jpeg" alt="Process Data">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">17.</span>
-                Click "Download Results"
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/17.jpeg" alt="Download Results">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">18.</span>
-                Click "Open SharePoint Folder"
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/18.jpeg" alt="Open SharePoint Folder">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">19.</span>
-                Click "Upload"
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/19.jpeg" alt="Click Upload">
-            </div>
-
-            <div class="stage">
-                <span class="stage-number">20.</span>
-                Click on 'Files' and locate the processed file in your downloads folder
-                <div class="tip">
-                    Look for the newly downloaded file (not the raw LinkedIn export). The filename starts with "U" followed by a letter, then an underscore (_)
-                </div>
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/20.jpeg" alt="Locate processed file">
-            </div>
-
-            <div class="stage" style="margin-bottom: 60px;">
-                <span class="stage-number">21.</span>
-                Your file is now uploaded and after a short wait, will have been moved to a private, secure location for processing
-                <img src="https://interpublic.sharepoint.com/sites/NetworkIntelligence/Shared%20Documents/Assets/21.jpeg" alt="File uploaded and moved">
-            </div>
-        </div>
-    </div>
-
-    <div class="important" style="margin-top: 30px;">
-        <strong>What happens next?</strong>
-        <p>We'll analyse your data to identify marketing roles and senior decision-makers within brands where we have high coverage. Your network's privacy is protected through anonymisation, and we'll follow up separately about any requests to connect.</p>
+        </main>
     </div>
 
     <script>
-        const ENABLE_INDICATOR_PLACEMENT = false;
+        // Auto-switching tabs functionality
+        let currentTab = 0;
+        let tabSwitchInterval;
+        let isAutoSwitching = true;
+        const tabs = ['metrics', 'tech', 'screenshots'];
+        
+        function startAutoSwitch() {
+            if (tabSwitchInterval) clearInterval(tabSwitchInterval);
+            
+            tabSwitchInterval = setInterval(() => {
+                if (isAutoSwitching) {
+                    currentTab = (currentTab + 1) % tabs.length;
+                    showSection(tabs[currentTab], true);
+                }
+            }, 8000); // Switch every 8 seconds
+        }
 
-        const predefinedIndicators = [
-            { image: "Click Me and Settings & Privacy", top: 224.4609375, left: 326 },
-            { image: "Click Data privacy", top: 284.0703125, left: 81 },
-            { image: "Get a copy of your data", top: 161.0234375, left: 290 },
-            { image: "Select particular data files", top: 204.484375, left: 208 },
-            { image: "Select Connections", top: 229.40625, left: 347 },
-            { image: "Download archive", top: 382.140625, left: 257 },
-            { image: "Start contributing now", top: 341.2890625, left: 287 },
-            { image: "I've Downloaded My Data", top: 220.2109375, left: 110 },
-            { image: "Go to Upload Page", top: 338.1328125, left: 89 },
-            { image: "Choose File", top: 339.4609375, left: 62 },
-            { image: "Process Data", top: 208.1171875, left: 86 },
-            { image: "Download Results", top: 353.5546875, left: 146 },
-            { image: "Open SharePoint Folder", top: 437.4765625, left: 141 },
-            { image: "Click Upload", top: 128, left: 124 },
-            { image: "Locate processed file", top: 235.1328125, left: 105 }
+        // Enhanced section switching functionality
+        function showSection(sectionName, isAuto = false) {
+            // Stop auto-switching if user manually clicks
+            if (!isAuto) {
+                isAutoSwitching = false;
+                if (tabSwitchInterval) clearInterval(tabSwitchInterval);
+                // Restart auto-switching after 10 seconds of inactivity
+                setTimeout(() => {
+                    isAutoSwitching = true;
+                    startAutoSwitch();
+                }, 10000);
+            }
+            
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected section
+            const targetSection = document.getElementById(sectionName);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Activate corresponding tab
+            const tabIndex = tabs.indexOf(sectionName);
+            if (tabIndex !== -1) {
+                const tabElements = document.querySelectorAll('.nav-tab');
+                if (tabElements[tabIndex]) {
+                    tabElements[tabIndex].classList.add('active');
+                }
+                currentTab = tabIndex;
+            }
+        }
+
+        // Screenshot management with your actual files
+        const screenshotData = [
+            {
+                src: './Image1.png',
+                title: 'Programme Overview Dashboard',
+                alt: 'Main dashboard showing total sessions, unique attendees, programme participation and weekly sessions'
+            },
+            {
+                src: './Image2.png', 
+                title: 'Session Summary & Performance',
+                alt: 'Individual session performance analysis with attendance data and completion charts'
+            },
+            {
+                src: './Image3.png',
+                title: 'Individual Progress Tracking',
+                alt: 'Person-by-session attendance matrix with detailed progress monitoring'
+            },
+            {
+                src: './Image4.png',
+                title: 'Agency Performance Summary',
+                alt: 'Agency-level engagement analytics with attendance rates and assignment compliance'
+            }
         ];
 
-        function addPredefinedIndicators() {
-            document.querySelectorAll('.stage img').forEach(img => {
-                const indicators = predefinedIndicators.filter(ind => ind.image === img.alt);
-                indicators.forEach(ind => {
-                    const indicator = document.createElement('div');
-                    indicator.className = 'click-indicator';
-                    indicator.style.top = ind.top + 'px';
-                    indicator.style.left = ind.left + 'px';
-                    img.parentElement.appendChild(indicator);
-                });
-            });
-        }
+        let currentScreenshot = 0;
+        let screenshotInterval;
 
-        function enableIndicatorPlacement() {
-            if (!ENABLE_INDICATOR_PLACEMENT) return;
+        function loadScreenshots() {
+            const display = document.getElementById('screenshot-display');
+            const titleElement = document.getElementById('screenshot-title');
+            const navElement = document.getElementById('screenshot-nav');
             
-            const indicatorHistory = [];
-
-            document.addEventListener('keydown', function(e) {
-                if (e.ctrlKey && e.key === 'z') {
-                    e.preventDefault();
-                    if (indicatorHistory.length > 0) {
-                        const lastIndicator = indicatorHistory.pop();
-                        lastIndicator.remove();
-                    }
-                }
-            });
-
-            document.querySelectorAll('.stage img').forEach(img => {
-                img.onclick = function(e) {
-                    const rect = e.target.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = (e.clientY - rect.top) + 40;
-                    
-                    console.log(`For image ${e.target.alt}:`);
-                    console.log(`<div class="click-indicator" style="top: ${y}px; left: ${x}px;"></div>`);
-                    
-                    const indicator = document.createElement('div');
-                    indicator.className = 'click-indicator';
-                    indicator.style.top = y + 'px';
-                    indicator.style.left = x + 'px';
-                    e.target.parentElement.appendChild(indicator);
-                    
-                    indicatorHistory.push(indicator);
-                };
-            });
-        }
-
-        function setupCollapsibleSections() {
-            document.querySelectorAll('.section-header').forEach(header => {
-                header.addEventListener('click', () => {
-                    header.classList.toggle('collapsed');
-                    header.nextElementSibling.classList.toggle('collapsed');
-                });
-            });
-        }
-
-        function setInitialState() {
-            // Check URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const showProcess = urlParams.get('process') === 'true';
+            // Add null checks
+            if (!display || !titleElement || !navElement) {
+                console.log('Screenshot elements not found during load');
+                return;
+            }
             
-            if (showProcess) {
-                // Collapse download section
-                document.querySelector('#download-section .section-header').classList.add('collapsed');
-                document.querySelector('#download-section .section-content').classList.add('collapsed');
+            // Check if any screenshots exist
+            const validScreenshots = screenshotData.filter(shot => shot.src && shot.src !== '');
+            
+            if (validScreenshots.length > 0) {
+                // Create navigation dots
+                navElement.innerHTML = validScreenshots.map((_, index) => 
+                    `<div class="screenshot-dot ${index === 0 ? 'active' : ''}" onclick="showScreenshot(${index})"></div>`
+                ).join('');
                 
-                // Expand process section
-                document.querySelector('#process-section .section-header').classList.remove('collapsed');
-                document.querySelector('#process-section .section-content').classList.remove('collapsed');
+                // Show first screenshot
+                showScreenshot(0);
+                
+                // Auto-cycle screenshots if more than one
+                if (validScreenshots.length > 1) {
+                    // Clear any existing interval
+                    if (screenshotInterval) {
+                        clearInterval(screenshotInterval);
+                    }
+                    screenshotInterval = setInterval(() => {
+                        currentScreenshot = (currentScreenshot + 1) % validScreenshots.length;
+                        showScreenshot(currentScreenshot);
+                    }, 15000); // Change every 15 seconds (much slower)
+                }
+            } else {
+                // Keep placeholder
+                display.innerHTML = `
+                    <div class="screenshot-placeholder">
+                        <div class="screenshot-icon">📸</div>
+                        <div class="screenshot-text">Dashboard Screenshots</div>
+                        <div class="screenshot-note">Add your dashboard screenshots to screenshotData array</div>
+                    </div>
+                `;
             }
         }
 
-        function setupScrollAnimations() {
-            // Create the observer
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        // Find all indicators in this stage
-                        const indicators = entry.target.querySelectorAll('.click-indicator');
-                        indicators.forEach(indicator => {
-                            // Remove any existing animation
-                            indicator.style.animation = 'none';
-                            // Force reflow
-                            indicator.offsetHeight;
-                            // Add the pulse animation (just once)
-                            indicator.style.animation = 'pulse 1s 1';
-                        });
-                        
-                        // Removed the unobserve line so it repeats on scroll back
+        function showScreenshot(index) {
+            const validScreenshots = screenshotData.filter(shot => shot.src && shot.src !== '');
+            if (index >= validScreenshots.length) return;
+            
+            const display = document.getElementById('screenshot-display');
+            const titleElement = document.getElementById('screenshot-title');
+            const dots = document.querySelectorAll('.screenshot-dot');
+            
+            // Add null checks
+            if (!display || !titleElement) {
+                console.log('Screenshot elements not found');
+                return;
+            }
+            
+            const screenshot = validScreenshots[index];
+            
+            // Update display
+            display.innerHTML = `
+                <img src="${screenshot.src}" 
+                     alt="${screenshot.alt}" 
+                     class="screenshot-image"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="screenshot-placeholder" style="display: none;">
+                    <div class="screenshot-icon">⚠️</div>
+                    <div class="screenshot-text">Image Not Found</div>
+                    <div class="screenshot-note">${screenshot.src}</div>
+                </div>
+            `;
+            
+            // Update title
+            titleElement.textContent = screenshot.title;
+            
+            // Update navigation dots with null check
+            if (dots && dots.length > 0) {
+                dots.forEach((dot, i) => {
+                    if (dot) {
+                        dot.classList.toggle('active', i === index);
                     }
                 });
-            }, {
-                threshold: 0.5 // Trigger when 50% of the element is visible
-            });
-
-            // Observe all stages that have images (and thus indicators)
-            document.querySelectorAll('.stage').forEach(stage => {
-                if (stage.querySelector('img')) {
-                    observer.observe(stage);
-                }
-            });
+            }
+            
+            currentScreenshot = index;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            setupCollapsibleSections();
-            setInitialState();
-            addPredefinedIndicators();
-            enableIndicatorPlacement();
-            setupScrollAnimations();
-
-            // Handle back button visibility and behavior
-            const backButton = document.querySelector('.back-button');
-            if (backButton) {
-                // Show back button if we came from either page
-                if (document.referrer.includes('processor.html') || document.referrer.includes('content.html')) {
-                    backButton.style.display = 'flex';
-                    
-                    // Update the back button to close the current tab instead of using history
-                    backButton.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        window.close();
-                    });
-                }
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            body.classList.toggle('light-theme');
+            
+            if (body.classList.contains('light-theme')) {
+                themeToggle.textContent = '🌞';
+                localStorage.setItem('theme', 'light');
+            } else {
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
             }
-        });
-    </script>
+        }
 
-    <a href="https://teams.microsoft.com/l/chat/0/0?users=elliot.dacosta@kinesso.com" class="help-button" target="_blank">?</a>
+        // Initialize everything with proper error handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.getElementById('theme-toggle');
+            
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                if (themeToggle) themeToggle.textContent = '🌞';
+            }
+            
+            // Load logo with error handling
+            try {
+                loadLogo('./Logo.png');
+            } catch (e) {
+                console.log('Logo loading failed:', e);
+            }
+            
+            // Setup screenshots with error handling
+            try {
+                setupScreenshots([
+                    {
+                        src: './Image1.png',
+                        title: 'Programme Overview Dashboard',
+                        alt: 'Main dashboard showing total sessions, unique attendees, programme participation and weekly sessions'
+                    },
+                    {
+                        src: './Image2.png', 
+                        title: 'Session Summary & Performance',
+                        alt: 'Individual session performance analysis with attendance data and completion charts'
+                    },
+                    {
+                        src: './Image3.png',
+                        title: 'Individual Progress Tracking',
+                        alt: 'Person-by-session attendance matrix with detailed progress monitoring'
+                    },
+                    {
+                        src: './Image4.png',
+                        title: 'Agency Performance Summary',
+                        alt: 'Agency-level engagement analytics with attendance rates and assignment compliance'
+                    }
+                ]);
+            } catch (e) {
+                console.log('Screenshot setup failed:', e);
+            }
+            
+            // Start auto-switching tabs after initial animations complete
+            setTimeout(() => {
+                try {
+                    startAutoSwitch();
+                    loadScreenshots();
+                } catch (e) {
+                    console.log('Auto-switch failed:', e);
+                }
+            }, 8000); // Start after all entrance animations
+        });
+
+        // Logo loading functionality with better error handling
+        function loadLogo(logoUrl) {
+            const logoImg = document.getElementById('logo-img');
+            const logoPlaceholder = document.getElementById('logo-placeholder');
+            
+            if (logoUrl && logoImg && logoPlaceholder) {
+                logoImg.onload = function() {
+                    if (logoImg && logoPlaceholder) {
+                        logoImg.style.display = 'block';
+                        logoPlaceholder.style.display = 'none';
+                    }
+                };
+                logoImg.onerror = function() {
+                    console.log('Logo failed to load:', logoUrl);
+                    // Keep placeholder visible
+                };
+                logoImg.src = logoUrl;
+            } else {
+                console.log('Logo elements not found or logoUrl missing');
+            }
+        }
+
+        // Simple setup functions for easy customization
+        function setupScreenshots(screenshots) {
+            // Override the default screenshotData
+            screenshotData.length = 0; // Clear existing
+            screenshotData.push(...screenshots);
+            loadScreenshots();
+        }
+
+        // Example usage:
+        // loadLogo('./assets/clm-logo.png');
+        // setupScreenshots([
+        //     {
+        //         src: './assets/dashboard-main.png',
+        //         title: 'Main Dashboard Overview',
+        //         alt: 'Primary dashboard showing key metrics and performance indicators'
+        //     },
+        //     {
+        //         src: './assets/analytics-detail.png',
+        //         title: 'Detailed Analytics View', 
+        //         alt: 'In-depth analytics with charts and breakdowns'
+        //     }
+        // ]);
+    </script>
 </body>
 </html>
